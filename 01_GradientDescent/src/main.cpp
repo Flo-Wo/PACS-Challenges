@@ -1,3 +1,4 @@
+#include <complex>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -13,17 +14,53 @@ void printHelp() {
   std::cout << "Use -p <filename.dat> to load user parameters" << std::endl;
 }
 
-template <int size, typename vector_type>
-vector_type obj_func(Eigen::Matrix<vector_type, size, 1> const& x) {
+template <int vec_size, typename vec_type>
+vec_type obj_func(Eigen::Matrix<vec_type, vec_size, 1> const& x) {
   return x[0] * x[1] + 4 * pow(x[0], 4) + pow(x[1], 2) + 3 * x[0];
 };
 
-template <int size, typename vector_type>
-Eigen::Matrix<vector_type, size, 1> grad_obj_func(
-    Eigen::Matrix<vector_type, size, 1> const& x) {
-  Eigen::Matrix<vector_type, size, 1> a{
+template <int vec_size, typename vec_type>
+Eigen::Matrix<vec_type, vec_size, 1> grad_obj_func(
+    Eigen::Matrix<vec_type, vec_size, 1> const& x) {
+  Eigen::Matrix<vec_type, vec_size, 1> a{
       {x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1]}};
   return a;
+};
+
+// function returning a function which approximates the derivative using finite
+// differences
+template <int vec_size, typename vec_type>
+std::function<const Eigen::Matrix<vec_type, vec_size, 1>(
+    const Eigen::Matrix<vec_type, vec_size, 1>&)>
+derivative_fd(
+    const std::function<vec_type(Eigen::Matrix<vec_type, vec_size, 1> const&)>
+        obj_func,
+    double h) {
+  // Compute diff via finite differences
+  // note, we bind the function via reference and the h explicitly, otherwise
+  // h=0
+  auto finite_diff = [&, h](Eigen::Matrix<vec_type, vec_size, 1> const& x)
+      -> Eigen::Matrix<vec_type, vec_size, 1> {
+    Eigen::Matrix<vec_type, vec_size, 1> first_der;
+
+    // pertubate each component individually and use central differences
+    for (int i = 0; i < vec_size; ++i) {
+      std::cout << "i = " << i << std::endl;
+      std::cout << "h = " << h << std::endl;
+      std::cout << "test = " << Eigen::Matrix<vec_type, vec_size, 1>::Unit(i)
+                << std::endl;
+      Eigen::Matrix<vec_type, vec_size, 1> pert =
+          h * Eigen::Matrix<vec_type, vec_size, 1>::Unit(i);
+      std::cout << "h_vec = " << pert << std::endl;
+      std::cout << "f(x+h) = " << obj_func(x + pert) << std::endl;
+      first_der[i] = (obj_func(x + pert) - obj_func(x - pert)) / (2 * h);
+    }
+    std::cout << "derivative = \n" << first_der << std::endl;
+    return first_der;
+  };
+  // return the lambda function and type it correctly
+  return std::function<Eigen::Matrix<vec_type, vec_size, 1>(
+      Eigen::Matrix<vec_type, vec_size, 1> const&)>(finite_diff);
 };
 
 int main(int argc, char** argv) {
@@ -32,7 +69,6 @@ int main(int argc, char** argv) {
     printHelp();
     return 0;
   };
-  // Search if we are giving —v version
   std::string filename = cl.follow("opti_options.dat", "-p");
   std::ifstream file(filename);
 
@@ -46,42 +82,43 @@ int main(int argc, char** argv) {
   double tol_step_length = gp("optimization/tol_res", 1.e-6);
   bool verbose = gp("optimization/opti_verbose", true);
   int max_iter = gp("optimization/max_iter", 1000);
-  std::cout << gp("step_size/alpha_0", 0.9) << std::endl;
 
   // template parameters
   constexpr int vec_size{2};
-  using vector_type = double;
+  using vec_type = double;
 
   // get the abstract methods for step size and stopping criterion
-  StepSizeAbstract<vec_size, vector_type>* step_size =
-      StepSizeFactory<vec_size, vector_type>::create_step_size(gp);
+  StepSizeAbstract<vec_size, vec_type>* step_size =
+      StepSizeFactory<vec_size, vec_type>::create_step_size(gp);
 
-  StoppingConditionBase<vec_size, vector_type> stop_cond{
-      tol_res, tol_step_length, max_iter};
+  StoppingConditionBase<vec_size, vec_type> stop_cond{tol_res, tol_step_length,
+                                                      max_iter};
 
-  Eigen::Matrix<vector_type, vec_size, 1> x_start{{0.0, 0.0}};
+  Eigen::Matrix<vec_type, vec_size, 1> x_start{{0.0, 0.0}};
 
   // Create std::function objects from the function pointers
-  std::function<vector_type(Eigen::Matrix<vector_type, vec_size, 1> const&)>
-      obj_func_std = obj_func<vec_size, vector_type>;
+  std::function<vec_type(Eigen::Matrix<vec_type, vec_size, 1> const&)>
+      obj_func_std = obj_func<vec_size, vec_type>;
 
-  std::function<Eigen::Matrix<vector_type, vec_size, 1>(
-      Eigen::Matrix<vector_type, vec_size, 1> const&)>
-      grad_obj_func_std = grad_obj_func<vec_size, vector_type>;
-
+  std::string grad_method = gp("gradient/method", "analytical");
+  std::function<Eigen::Matrix<vec_type, vec_size, 1>(
+      Eigen::Matrix<vec_type, vec_size, 1> const&)>
+      grad_obj_func_std;
+  if (grad_method == "analytical") {
+    // analytical derivative
+    grad_obj_func_std = grad_obj_func<vec_size, vec_type>;
+  } else {
+    // numerical computation
+    double h = gp("gradient/h_finite_difference", 0.001);
+    std::cout << "h = " << h << std::endl;
+    grad_obj_func_std = derivative_fd<vec_size, vec_type>(obj_func_std, h);
+  }
   std::cout << "Starting the optimization" << std::endl;
-  Eigen::Matrix<vector_type, vec_size, 1> x_sol =
-      gradient_descent<vec_size, vector_type>(obj_func_std, grad_obj_func_std,
-                                              x_start, stop_cond, step_size,
-                                              verbose);
-
+  Eigen::Matrix<vec_type, vec_size, 1> x_sol =
+      gradient_descent<vec_size, vec_type>(obj_func_std, grad_obj_func_std,
+                                           x_start, stop_cond, step_size,
+                                           verbose);
   std::cout << "solution = \n" << x_sol << "\n" << std::endl;
   std::cout << "Finished the optimization" << std::endl;
   return 0;
 }
-
-/*
-TODO:
-- check by reference, check const types
-- generalize the descent method
-*/

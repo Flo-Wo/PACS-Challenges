@@ -9,7 +9,7 @@
 #include "StoppingConditionBase.hpp"
 
 template <int Size, typename Type>
-Eigen::Matrix<Type, Size, 1>& gradient_descent(
+Eigen::Matrix<Type, Size, 1> gradient_descent(
     std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
     std::function<
         Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
