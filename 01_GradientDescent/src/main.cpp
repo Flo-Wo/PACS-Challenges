@@ -23,8 +23,11 @@ vec_type obj_func(Eigen::Matrix<vec_type, vec_size, 1> const& x) {
 template <int vec_size, typename vec_type>
 Eigen::Matrix<vec_type, vec_size, 1> grad_obj_func(
     Eigen::Matrix<vec_type, vec_size, 1> const& x) {
-  Eigen::Matrix<vec_type, vec_size, 1> a{
-      {x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1]}};
+  Eigen::Matrix<vec_type, vec_size, 1> a;
+  // NOTE: this is eigen 3.3.9
+  a << x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1];
+  // this is Eigen 3.4.0
+  // {{x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1]}};
   return a;
 };
 
@@ -99,7 +102,8 @@ int main(int argc, char** argv) {
   StoppingConditionBase<vec_size, vec_type> stop_cond{tol_res, tol_step_length,
                                                       max_iter};
 
-  Eigen::Matrix<vec_type, vec_size, 1> x_start{{0.0, 0.0}};
+  Eigen::Matrix<vec_type, vec_size, 1> x_start;  //{{0.0, 0.0}};
+  x_start << 0.0, 0.0;
 
   // Create std::function objects from the function pointers
   std::function<vec_type(Eigen::Matrix<vec_type, vec_size, 1> const&)>
