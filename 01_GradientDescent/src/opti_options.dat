@@ -7,8 +7,8 @@ opti_verbose = true
 
 [step_size]
 # options are: Armijo, Exponential, InverseDecay
-method = Exponential
-step_size_verbose = true
+method = Armijo
+step_size_verbose = false
 alpha_0 = 0.2
 [./armijo]
 sigma = 0.45
@@ -16,6 +16,11 @@ sigma = 0.45
 mu = 0.2
 
 [gradient]
+[./computation]
 # options are: analytical, fd
-method = fd
+method = analytical
 h_finite_difference = 1.e-3
+[./direction]
+# options are: steepest, momentum
+method = steepest
+memory = 0.9

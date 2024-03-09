@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+#include "DescentDirectionFactory.hpp"
 #include "Eigen/Dense"
 #include "GetPot.hpp"
 #include "StepSizeAbstract.hpp"
@@ -45,17 +46,18 @@ derivative_fd(
 
     // pertubate each component individually and use central differences
     for (int i = 0; i < vec_size; ++i) {
+      Eigen::Matrix<vec_type, vec_size, 1> pert =
+          h * Eigen::Matrix<vec_type, vec_size, 1>::Unit(i);
+#ifdef DEBUG
       std::cout << "i = " << i << std::endl;
       std::cout << "h = " << h << std::endl;
       std::cout << "test = " << Eigen::Matrix<vec_type, vec_size, 1>::Unit(i)
                 << std::endl;
-      Eigen::Matrix<vec_type, vec_size, 1> pert =
-          h * Eigen::Matrix<vec_type, vec_size, 1>::Unit(i);
       std::cout << "h_vec = " << pert << std::endl;
       std::cout << "f(x+h) = " << obj_func(x + pert) << std::endl;
+#endif
       first_der[i] = (obj_func(x + pert) - obj_func(x - pert)) / (2 * h);
     }
-    std::cout << "derivative = \n" << first_der << std::endl;
     return first_der;
   };
   // return the lambda function and type it correctly
@@ -91,6 +93,9 @@ int main(int argc, char** argv) {
   StepSizeAbstract<vec_size, vec_type>* step_size =
       StepSizeFactory<vec_size, vec_type>::create_step_size(gp);
 
+  DescentDirectionAbstract<vec_size, vec_type>* descent =
+      DescentDirectionFactory<vec_size, vec_type>::create_descent(gp);
+
   StoppingConditionBase<vec_size, vec_type> stop_cond{tol_res, tol_step_length,
                                                       max_iter};
 
@@ -100,7 +105,7 @@ int main(int argc, char** argv) {
   std::function<vec_type(Eigen::Matrix<vec_type, vec_size, 1> const&)>
       obj_func_std = obj_func<vec_size, vec_type>;
 
-  std::string grad_method = gp("gradient/method", "analytical");
+  std::string grad_method = gp("gradient/computation/method", "analytical");
   std::function<Eigen::Matrix<vec_type, vec_size, 1>(
       Eigen::Matrix<vec_type, vec_size, 1> const&)>
       grad_obj_func_std;
@@ -109,7 +114,7 @@ int main(int argc, char** argv) {
     grad_obj_func_std = grad_obj_func<vec_size, vec_type>;
   } else {
     // numerical computation
-    double h = gp("gradient/h_finite_difference", 0.001);
+    double h = gp("gradient/computation/h_finite_difference", 0.001);
     std::cout << "h = " << h << std::endl;
     grad_obj_func_std = derivative_fd<vec_size, vec_type>(obj_func_std, h);
   }
@@ -117,8 +122,15 @@ int main(int argc, char** argv) {
   Eigen::Matrix<vec_type, vec_size, 1> x_sol =
       gradient_descent<vec_size, vec_type>(obj_func_std, grad_obj_func_std,
                                            x_start, stop_cond, step_size,
-                                           verbose);
+                                           descent, verbose);
   std::cout << "solution = \n" << x_sol << "\n" << std::endl;
   std::cout << "Finished the optimization" << std::endl;
   return 0;
 }
+
+/*
+TODO:
+- fix bug
+- add description
+- add compile instructions (make file)
+*/
