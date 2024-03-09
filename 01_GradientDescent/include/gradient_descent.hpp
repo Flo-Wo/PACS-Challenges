@@ -78,7 +78,7 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
   if (verbose) {
     std::cout << "FINISHED: \n\t#Iterations = " << k_iter << std::endl;
     std::cout << "\tf(x) = " << obj_func(x_curr) << std::endl;
-    std::cout << "\t||∇f(x)|| = " << obj_func(x_curr) << std::endl;
+    std::cout << "\t||∇f(x)|| = " << grad_xk.norm() << std::endl;
   }
 
   // if opti ended to due max iter --> should give a warning

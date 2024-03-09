@@ -89,7 +89,8 @@ template <int Size, typename Type>
 class DescentDirectionFactory {
  public:
   static DescentDirectionAbstract<Size, Type>* create_descent(GetPot& gp) {
-    std::string grad_dir = gp("gradient/direction/method", "steepest");
+    std::string grad_dir =
+        gp("gradient/computation/direction/method", "steepest");
     if (grad_dir == "steepest") {
       std::cout << "Using Steepest Descent direction." << std::endl;
       return new SteepestDescent<Size, Type>();

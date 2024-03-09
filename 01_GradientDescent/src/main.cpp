@@ -118,9 +118,8 @@ int main(int argc, char** argv) {
     // analytical derivative
     grad_obj_func_std = grad_obj_func<vec_size, vec_type>;
   } else {
-    std::cout << "Using numerical derivative (FD)." << std::endl;
     double h = gp("gradient/computation/h_finite_difference", 0.001);
-    std::cout << "h = " << h << std::endl;
+    std::cout << "Using numerical derivative (FD) with h = " << h << std::endl;
     grad_obj_func_std = derivative_fd<vec_size, vec_type>(obj_func_std, h);
   }
   std::cout << "Starting the optimization" << std::endl;
