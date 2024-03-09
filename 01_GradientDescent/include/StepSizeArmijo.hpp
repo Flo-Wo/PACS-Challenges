@@ -14,7 +14,7 @@ concept Type = std::convertible_to<ConvertToDouble, double>;
 template <int Size, typename Type>
 class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
  public:
-  StepSizeArmijo(double alpha_0, double sigma) {
+  StepSizeArmijo(double alpha_0, double sigma, bool verbose = false) {
     if (!(alpha_0 > 0)) {
       std::cout << "alpha_0 has to be larger than zero" << std::endl;
       exit(0);
@@ -25,6 +25,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
       exit(0);
     }
     this->_sigma = sigma;
+    this->_verbose = verbose;
   };
   // no dynamic memery allocation
   ~StepSizeArmijo(){};
@@ -36,20 +37,38 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
           grad_obj_func) const {
     double curr_alpha(this->_alpha_0);
+
+    // we precompute all alpha-independent terms
+    Type x_curr_eval = obj_func(x_curr);
+    Eigen::Matrix<Type, Size, 1> curr_dir = grad_obj_func(x_curr);
+    Type rhs_without_alpha = this->_sigma * curr_dir.norm();
+
     auto condition = [&](Type alpha) {
-      auto x_curr_eval = obj_func(x_curr);
-      auto x_next_eval = obj_func(x_curr - alpha * grad_obj_func(x_curr));
-      return (x_curr_eval - x_next_eval) >=
-             this->_sigma * alpha * grad_obj_func(x_curr).norm();
+      Type x_next_eval = obj_func(x_curr - alpha * curr_dir);
+#ifdef DEBUG
+      std::cout << "alpha = " << alpha << std::endl;
+      std::cout << "left-hand side: " << x_curr_eval - x_next_eval << std::endl;
+      std::cout << "right-hand side: " << alpha * rhs_without_alpha
+                << std::endl;
+#endif
+      return (x_curr_eval - x_next_eval) >= alpha * rhs_without_alpha;
     };
+    int it = 0;
     while (!condition(curr_alpha)) {
       curr_alpha /= 2;
+      ++it;
     }
+    if (this->_verbose) {
+      std::cout << "Linesearch ended, alpha = " << curr_alpha
+                << " #step = " << it << std::endl;
+    }
+
     return curr_alpha;
   };
 
  private:
   double _alpha_0;
   double _sigma;
+  bool _verbose;
 };
 #endif  // STEP_SIZE_ARMIJO_HPP

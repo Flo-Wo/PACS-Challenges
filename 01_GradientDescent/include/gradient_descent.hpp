@@ -28,15 +28,26 @@ Eigen::Matrix<Type, Size, 1>& gradient_descent(
   if (grad_obj_func(x_start).norm() < stop_cond.get_tol_res()) {
     return x_curr;
   }
+  std::cout << "Reached non-trivial case" << std::endl;
 
   // make single step to simplify the stopping condition, i.e. change x_k
+  double step_size_test =
+      step_size.get_stepsize(x_prev, obj_func, grad_obj_func);
   x_curr = x_prev - step_size.get_stepsize(x_prev, obj_func, grad_obj_func) *
                         grad_obj_func(x_prev);
+
+  std::cout << "step_size = " << step_size_test << std::endl;
+  std::cout << "x_curr = " << x_curr << std::endl;
+  std::cout << "x_prev = " << x_prev << std::endl;
   k_iter++;
 
+  std::cout << "starting the loop" << std::endl;
   while (!stop_cond.stop(x_curr, x_prev, obj_func, grad_obj_func, k_iter)) {
+    std::cout << "\n\nstep_size = " << step_size_test << std::endl;
+    std::cout << "x_curr = " << x_curr << std::endl;
+    std::cout << "x_prev = " << x_prev << std::endl;
     if (verbose) {
-      std::cout << "Curr it: " << k_iter
+      std::cout << "Curr it: " << k_iter << "\n"
                 << "Grad(f)(x_k) = " << grad_obj_func(x_curr) << std::endl;
     }
     x_prev = x_curr;  // copy?
@@ -45,6 +56,7 @@ Eigen::Matrix<Type, Size, 1>& gradient_descent(
     k_iter++;
   }
 
+  std::cout << "#Iterations = " << k_iter << std::endl;
   // if opti ended to due max iter --> should give a warning
   if (k_iter == stop_cond.get_max_iter()) {
     std::cout << "Maximum number of iterations reached, algo probably did not "

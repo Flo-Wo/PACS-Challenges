@@ -9,20 +9,20 @@
 
 template <int size, typename vector_type>
 vector_type obj_func(Eigen::Matrix<vector_type, size, 1> const& x) {
-  return x[0] * x[1] + 4 * pow(x[0], 4) + pow(x[1], 2) + 3 * x[1];
+  return x[0] * x[1] + 4 * pow(x[0], 4) + pow(x[1], 2) + 3 * x[0];
 };
 
 template <int size, typename vector_type>
 Eigen::Matrix<vector_type, size, 1> grad_obj_func(
     Eigen::Matrix<vector_type, size, 1> const& x) {
   Eigen::Matrix<vector_type, size, 1> a{
-      {x[1] + 16 * pow(x[0], 3) + 3, x[0] + 3 * x[1]}};
+      {x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1]}};
   return a;
 };
 
 int main() {
-  double tol_res = 1.e-6;
-  double tol_step_length = 1.e-6;
+  double tol_res = 1.e-16;
+  double tol_step_length = 1.e-12;
   int max_iter = 1000;
 
   // template parameters
@@ -37,21 +37,10 @@ int main() {
   // TODO: check for init --> correct?
   Eigen::Matrix<vector_type, vec_size, 1> x_start{{0.0, 0.0}};
 
-  // auto obj_func = [](Eigen::Matrix<vector_type, size, 1>& x) -> vector_type {
-  //   return x[0] * x[1] + 4 * pow(x[0], 4) + pow(x[1], 2) + 4 * x[1];
-  // };
-
-  // auto grad_obj_func = [](Eigen::Matrix<vector_type, size, 1>& x)
-  //     -> Eigen::Matrix<vector_type, size, 1> {
-  //   Eigen::Matrix<vector_type, size, 1> a{x[1] + 16 * pow(x[0], 3) + 3,
-  //                                         x[0] + 4 * x[1]};
-  //   return a;
-  //   ;
-  // };
-
   // Create std::function objects from the function pointers
   std::function<vector_type(Eigen::Matrix<vector_type, vec_size, 1> const&)>
       obj_func_std = obj_func<vec_size, vector_type>;
+
   std::function<Eigen::Matrix<vector_type, vec_size, 1>(
       Eigen::Matrix<vector_type, vec_size, 1> const&)>
       grad_obj_func_std = grad_obj_func<vec_size, vector_type>;
@@ -61,6 +50,7 @@ int main() {
       gradient_descent<vec_size, vector_type>(
           obj_func_std, grad_obj_func_std, x_start, stop_cond, step_size, true);
 
+  std::cout << "solution = " << x_sol << std::endl;
   std::cout << "Finished the optimization" << std::endl;
   return 0;
 }

@@ -22,7 +22,8 @@ class StoppingConditionBase {
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
           grad_obj_func,
       int const k) const {
-    if (((x_curr - x_prev).norm() < this->_tol_step_length) or
+    if (
+        //((x_curr - x_prev).norm() < this->_tol_step_length) or
         (grad_obj_func(x_curr).norm() < this->_tol_res) or
         (k > this->_max_iter)) {
       return true;

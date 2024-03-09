@@ -43,23 +43,9 @@ $(DEPEND): $(SRCS)
 -include $(DEPEND)
 
 
-mpc:
-	g++ -O3 -std=c++20 \
-		-I"/opt/homebrew/include/eigen3" \
-		-I"../include/" \
-		-I"../include/StoppingConditionBase" \
-		-I"../include/StepSizeArmijo" \
-		./StoppingConditionBase.o \
-		./main.cpp -o ./main.o
-
-mpc_compile:
+compile:
 	g++ -O3 -std=c++20 \
     	-I"/opt/homebrew/include/eigen3" \
     	-I"../include/" \
-    	-c main.cpp -o main.o
-mpc_test:
-	g++ -O3 -std=c++20 \
-    	-I"/opt/homebrew/include/eigen3" \
-    	-I"../include/" \
-    	main.o \
+    	main.cpp \
     	-o main.out
