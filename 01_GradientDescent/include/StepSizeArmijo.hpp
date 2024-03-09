@@ -43,7 +43,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
     // we precompute all alpha-independent terms
     Type x_curr_eval = obj_func(x_curr);
     Eigen::Matrix<Type, Size, 1> curr_dir = grad_obj_func(x_curr);
-    Type rhs_without_alpha = this->_sigma * curr_dir.norm();
+    Type rhs_without_alpha = this->_sigma * curr_dir.squaredNorm();
 
     auto condition = [&](Type alpha) {
       Type x_next_eval = obj_func(x_curr - alpha * curr_dir);
@@ -53,7 +53,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
       std::cout << "right-hand side: " << alpha * rhs_without_alpha
                 << std::endl;
 #endif
-      return (x_curr_eval - x_next_eval) >= alpha * rhs_without_alpha;
+      return (x_next_eval - x_curr_eval) <= alpha * rhs_without_alpha;
     };
 
     // actual loop to check for the satisfied condition, count iterations

@@ -33,14 +33,13 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
     return x_curr;
   }
 
-  // non-trivial case
+  // non-trivial case:
   // --> init the step size and start caching the descent directions
   double step_size_val =
       step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func);
   descent->set_grad_x0(grad_xk);
   // make single step to simplify the stopping condition, i.e. change x_k
   x_curr = x_prev - step_size_val * grad_xk;
-  // descent->get_dir(grad_xk, step_size_val, x_curr, x_prev);
   ++k_iter;
 
 #ifdef DEBUG
@@ -69,11 +68,10 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
     }
     x_prev = x_curr;  // copy the Eigen matrix
 
-    // compute the gradient and the step size
+    // compute the descent direction and the step size
     grad_xk = grad_obj_func(x_curr);
     step_size_val = step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func);
     x_curr = x_prev - step_size_val * grad_xk;
-    // descent->get_dir(grad_xk, step_size_val, x_curr, x_prev);
     ++k_iter;
   }
 

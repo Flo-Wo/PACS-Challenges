@@ -110,10 +110,11 @@ int main(int argc, char** argv) {
       Eigen::Matrix<vec_type, vec_size, 1> const&)>
       grad_obj_func_std;
   if (grad_method == "analytical") {
+    std::cout << "Using Analytical derivative." << std::endl;
     // analytical derivative
     grad_obj_func_std = grad_obj_func<vec_size, vec_type>;
   } else {
-    // numerical computation
+    std::cout << "Using numerical derivative (FD)." << std::endl;
     double h = gp("gradient/computation/h_finite_difference", 0.001);
     std::cout << "h = " << h << std::endl;
     grad_obj_func_std = derivative_fd<vec_size, vec_type>(obj_func_std, h);

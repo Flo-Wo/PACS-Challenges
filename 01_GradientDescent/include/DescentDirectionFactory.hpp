@@ -11,15 +11,23 @@ class DescentDirectionAbstract {
  public:
   // const version for the steepest descent
   virtual Eigen::Matrix<Type, Size, 1> get_dir(
-      const Eigen::Matrix<Type, Size, 1>& grad_x_k, double step_size,
+      const Eigen::Matrix<Type, Size, 1>& grad_x_curr, double step_size,
       const Eigen::Matrix<Type, Size, 1>& x_curr,
-      const Eigen::Matrix<Type, Size, 1>& x_prev) const {};
+      const Eigen::Matrix<Type, Size, 1>& x_prev) const {
+    // NOTE: this is implement to avoid a warning, but could be dangerous since
+    // it is hard to catch
+    return Eigen::Matrix<Type, Size, 1>{};
+  };
 
   // non-const version for the momentum
   virtual Eigen::Matrix<Type, Size, 1> get_dir(
-      const Eigen::Matrix<Type, Size, 1>& grad_x_k, double step_size,
+      const Eigen::Matrix<Type, Size, 1>& grad_x_curr, double step_size,
       const Eigen::Matrix<Type, Size, 1>& x_curr,
-      const Eigen::Matrix<Type, Size, 1>& x_prev){};
+      const Eigen::Matrix<Type, Size, 1>& x_prev) {
+    // NOTE: this is implement to avoid a warning, but could be dangerous since
+    // it is hard to catch
+    return Eigen::Matrix<Type, Size, 1>{};
+  };
 
   // enables us to call the setter within the descent method, so we don't need
   // to pass the data loader into the method, only if we need to store sth.
@@ -33,10 +41,10 @@ class SteepestDescent : public DescentDirectionAbstract<Size, Type> {
  public:
   SteepestDescent(){};
   Eigen::Matrix<Type, Size, 1> get_dir(
-      const Eigen::Matrix<Type, Size, 1>& grad_x_k, double step_size,
+      const Eigen::Matrix<Type, Size, 1>& grad_x_curr, double step_size,
       const Eigen::Matrix<Type, Size, 1>& x_curr,
       const Eigen::Matrix<Type, Size, 1>& x_prev) const override {
-    return (-1) * step_size * grad_x_k;
+    return (-1) * step_size * grad_x_curr;
   };
 };
 
@@ -60,14 +68,14 @@ class Momentum : public DescentDirectionAbstract<Size, Type> {
     this->_momentum = grad_x0;
   }
   Eigen::Matrix<Type, Size, 1> get_dir(
-      const Eigen::Matrix<Type, Size, 1>& grad_x_k, double step_size,
+      const Eigen::Matrix<Type, Size, 1>& grad_x_curr, double step_size,
       const Eigen::Matrix<Type, Size, 1>& x_curr,
       const Eigen::Matrix<Type, Size, 1>& x_prev) override {
     // get the previous direction
     Eigen::Matrix<Type, Size, 1> dir = this->_momentum;
     // update the internal momentum with the current gradient
-    this->_momentum =
-        this->_get_memory(step_size) * this->_momentum - step_size * grad_x_k;
+    this->_momentum = this->_get_memory(step_size) * this->_momentum -
+                      step_size * grad_x_curr;
     return dir;
   };
 
