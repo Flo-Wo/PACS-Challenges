@@ -3,20 +3,16 @@
 tol_res = 1.e-6
 tol_step_length = 1.e-6
 max_iter = 1000
-opti_verbose = false
+opti_verbose = true
 
-# Options for the choice of the step size algorithm
 [step_size]
-option = Armijo
+# options are: Armijo, Exponential, InverseDecay
+method = Exponential
 step_size_verbose = false
-
-# parameters for the methods
-alpha_0 = 1
+alpha_0 = 0.2
 [./armijo]
 sigma = 0.45
-[./exponential]
-mu = 0.2
-[./inverse_decay]
+[./exponential_and_inverseDecay]
 mu = 0.2
 
 # Gradient computation method

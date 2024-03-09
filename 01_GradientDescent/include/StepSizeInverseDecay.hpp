@@ -33,7 +33,7 @@ class StepSizeInverseDecay : public StepSizeAbstract<Size, Type> {
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
-          grad_obj_func) const {
+          grad_obj_func) const override {
     double step_size = this->_alpha_0 / (1 + this->_mu * k_iter);
     if (this->_verbose) {
       std::cout << "Linesearch ended, alpha = " << step_size << std::endl;

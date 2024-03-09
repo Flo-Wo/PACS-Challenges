@@ -13,12 +13,13 @@ class StepSizeExponential : public StepSizeAbstract<Size, Type> {
  public:
   StepSizeExponential(double alpha_0, double mu, bool verbose = false) {
     if (!(alpha_0 > 0)) {
-      std::cout << "alpha_0 has to be larger than zero" << std::endl;
+      std::cout << "alpha_0 has to be larger than zero, currently " << alpha_0
+                << std::endl;
       exit(0);
     }
     this->_alpha_0 = alpha_0;
     if (!(0 < mu)) {
-      std::cout << "mu has to be > 0." << std::endl;
+      std::cout << "mu has to be > 0, currently " << mu << std::endl;
       exit(0);
     }
     this->_mu = mu;
@@ -32,10 +33,8 @@ class StepSizeExponential : public StepSizeAbstract<Size, Type> {
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
-          grad_obj_func) const {
-    double step_size =
-        this->_alpha_0 *
-        exp((-1) * (this->_mu * k_iter)) double curr_alpha(this->_alpha_0);
+          grad_obj_func) const override {
+    double step_size = this->_alpha_0 * exp((-1) * (this->_mu * k_iter));
     if (this->_verbose) {
       std::cout << "Linesearch ended, alpha = " << step_size << std::endl;
     }

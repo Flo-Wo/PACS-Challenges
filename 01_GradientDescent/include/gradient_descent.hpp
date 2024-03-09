@@ -16,7 +16,7 @@ Eigen::Matrix<Type, Size, 1>& gradient_descent(
         grad_obj_func,
     Eigen::Matrix<Type, Size, 1> const& x_start,
     StoppingConditionBase<Size, Type> const& stop_cond,
-    StepSizeAbstract<Size, Type> const& step_size, bool const verbose = false) {
+    StepSizeAbstract<Size, Type> const* step_size, bool const verbose = false) {
   int k_iter = 0;
   Eigen::Matrix<Type, Size, 1> x_prev{x_start};
   Eigen::Matrix<Type, Size, 1> x_curr{x_start};
@@ -30,32 +30,47 @@ Eigen::Matrix<Type, Size, 1>& gradient_descent(
   }
 
   // make single step to simplify the stopping condition, i.e. change x_k
-  x_curr = x_prev - step_size.get_stepsize(x_prev, 0, obj_func, grad_obj_func) *
-                        grad_obj_func(x_prev);
+  x_curr =
+      x_prev - step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func) *
+                   grad_obj_func(x_prev);
   ++k_iter;
 
+#ifdef DEBUG
+  std::cout << "\n\nFirst iteration before the loop: " << std::endl;
+  std::cout << "step size: "
+            << step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func)
+            << std::endl;
+  std::cout << "dir =  " << grad_obj_func(x_prev) << std::endl;
+  std::cout << "x_prev = " << x_prev << std::endl;
+  std::cout << "x_curr = " << x_curr << std::endl;
+#endif
   // actual descent algorithm
   while (!stop_cond.stop(x_curr, x_prev, obj_func, grad_obj_func, k_iter)) {
 #ifdef DEBUG
-    std::cout << "step_size = "
-              << step_size.get_stepsize(x_prev, k_iter, obj_func, grad_obj_func)
+    std::cout << "\n\nstep_size = "
+              << step_size->get_stepsize(x_prev, k_iter, obj_func,
+                                         grad_obj_func)
               << std::endl;
+    std::cout << "dir = " << grad_obj_func(x_curr) << std::endl;
+    std::cout << "x_prev = " << x_prev << "\n\n" << std::endl;
     std::cout << "x_curr = " << x_curr << std::endl;
-    std::cout << "x_prev = " << x_prev << std::endl;
 #endif
     if (verbose and k_iter % 10 == 0) {
-      std::cout << "Curr it: " << k_iter << "\n"
-                << "Grad(f)(x_k) = " << grad_obj_func(x_curr) << std::endl;
+      std::cout << "Curr it: " << k_iter
+                << ", ||∇(f)(x_k)|| = " << grad_obj_func(x_curr).norm()
+                << std::endl;
     }
     x_prev = x_curr;  // copy the Eigen matrix
     x_curr = x_prev -
-             step_size.get_stepsize(x_prev, k_iter, obj_func, grad_obj_func) *
+             step_size->get_stepsize(x_prev, k_iter, obj_func, grad_obj_func) *
                  grad_obj_func(x_prev);
     ++k_iter;
   }
 
   if (verbose) {
-    std::cout << "#Iterations = " << k_iter << std::endl;
+    std::cout << "FINISHED: \n\t#Iterations = " << k_iter << std::endl;
+    std::cout << "\tf(x) = " << obj_func(x_curr) << std::endl;
+    std::cout << "\t||∇f(x)|| = " << obj_func(x_curr) << std::endl;
   }
 
   // if opti ended to due max iter --> should give a warning

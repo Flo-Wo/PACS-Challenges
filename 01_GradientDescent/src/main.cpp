@@ -5,10 +5,9 @@
 #include "Eigen/Dense"
 #include "GetPot.hpp"
 #include "StepSizeAbstract.hpp"
+#include "StepSizeFactory.hpp"
 #include "StoppingConditionBase.hpp"
 #include "gradient_descent.hpp"
-// later --> factory
-#include "StepSizeArmijo.hpp"
 
 void printHelp() {
   std::cout << "Use -p <filename.dat> to load user parameters" << std::endl;
@@ -34,7 +33,6 @@ int main(int argc, char** argv) {
     return 0;
   };
   // Search if we are giving —v version
-  bool verbose = cl.search("-v");
   std::string filename = cl.follow("opti_options.dat", "-p");
   std::ifstream file(filename);
 
@@ -46,18 +44,21 @@ int main(int argc, char** argv) {
 
   double tol_res = gp("optimization/tol_res", 1.e-6);
   double tol_step_length = gp("optimization/tol_res", 1.e-6);
+  bool verbose = gp("optimization/opti_verbose", true);
   int max_iter = gp("optimization/max_iter", 1000);
+  std::cout << gp("step_size/alpha_0", 0.9) << std::endl;
 
   // template parameters
   constexpr int vec_size{2};
   using vector_type = double;
 
   // get the abstract methods for step size and stopping criterion
-  StepSizeArmijo<vec_size, vector_type> step_size{0.45, 0.1};
+  StepSizeAbstract<vec_size, vector_type>* step_size =
+      StepSizeFactory<vec_size, vector_type>::create_step_size(gp);
+
   StoppingConditionBase<vec_size, vector_type> stop_cond{
       tol_res, tol_step_length, max_iter};
 
-  // TODO: check for init --> correct?
   Eigen::Matrix<vector_type, vec_size, 1> x_start{{0.0, 0.0}};
 
   // Create std::function objects from the function pointers
@@ -70,10 +71,11 @@ int main(int argc, char** argv) {
 
   std::cout << "Starting the optimization" << std::endl;
   Eigen::Matrix<vector_type, vec_size, 1> x_sol =
-      gradient_descent<vec_size, vector_type>(
-          obj_func_std, grad_obj_func_std, x_start, stop_cond, step_size, true);
+      gradient_descent<vec_size, vector_type>(obj_func_std, grad_obj_func_std,
+                                              x_start, stop_cond, step_size,
+                                              verbose);
 
-  std::cout << "solution = " << x_sol << std::endl;
+  std::cout << "solution = \n" << x_sol << "\n" << std::endl;
   std::cout << "Finished the optimization" << std::endl;
   return 0;
 }
@@ -81,8 +83,5 @@ int main(int argc, char** argv) {
 /*
 TODO:
 - check by reference, check const types
-- step size factory
-- read options at run time --> call the factory
-
 - generalize the descent method
 */

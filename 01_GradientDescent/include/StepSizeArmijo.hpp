@@ -16,12 +16,14 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
  public:
   StepSizeArmijo(double alpha_0, double sigma, bool verbose = false) {
     if (!(alpha_0 > 0)) {
-      std::cout << "alpha_0 has to be larger than zero" << std::endl;
+      std::cout << "alpha_0 has to be larger than zero, instead: " << alpha_0
+                << std::endl;
       exit(0);
     }
     this->_alpha_0 = alpha_0;
     if (!(0 < sigma and sigma < 0.5)) {
-      std::cout << "sigma has to be in (0, 0.5)" << std::endl;
+      std::cout << "sigma has to be in (0, 0.5), instead: " << sigma
+                << std::endl;
       exit(0);
     }
     this->_sigma = sigma;
@@ -35,7 +37,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
-          grad_obj_func) const {
+          grad_obj_func) const override {
     double curr_alpha(this->_alpha_0);
 
     // we precompute all alpha-independent terms
@@ -62,7 +64,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
     }
     if (this->_verbose) {
       std::cout << "Linesearch ended, alpha = " << curr_alpha
-                << " #step = " << it << std::endl;
+                << " #steps = " << it << std::endl;
     }
 
     return curr_alpha;
