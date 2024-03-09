@@ -16,14 +16,14 @@ class StoppingConditionBase {
   virtual bool stop(
       Eigen::Matrix<Type, Size, 1> const& x_curr,
       Eigen::Matrix<Type, Size, 1> const& x_prev,
-      // obj_fun not needed, but potentially for overriding
+      // obj_fun not needed, but potentially for overriding methods
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
           grad_obj_func,
       int const k) const {
-    if (
-        //((x_curr - x_prev).norm() < this->_tol_step_length) or
+    // condition given in the challenge
+    if (((x_curr - x_prev).norm() < this->_tol_step_length) or
         (grad_obj_func(x_curr).norm() < this->_tol_res) or
         (k > this->_max_iter)) {
       return true;

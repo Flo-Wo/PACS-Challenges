@@ -31,7 +31,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
   ~StepSizeArmijo(){};
 
   double get_stepsize(
-      Eigen::Matrix<Type, Size, 1>& x_curr,
+      Eigen::Matrix<Type, Size, 1>& x_curr, const int k_iter,
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>
@@ -53,6 +53,8 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
 #endif
       return (x_curr_eval - x_next_eval) >= alpha * rhs_without_alpha;
     };
+
+    // actual loop to check for the satisfied condition, count iterations
     int it = 0;
     while (!condition(curr_alpha)) {
       curr_alpha /= 2;

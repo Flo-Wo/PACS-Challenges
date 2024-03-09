@@ -9,7 +9,7 @@ class StepSizeAbstract {
  public:
   // purely virtual function, to serve as an interface/abstract class
   virtual double get_stepsize(
-      Eigen::Matrix<Type, Size, 1>& x_curr,
+      Eigen::Matrix<Type, Size, 1>& x_curr, const int k_iter,
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>

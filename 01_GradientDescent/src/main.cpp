@@ -1,11 +1,18 @@
+#include <fstream>
 #include <iostream>
+#include <string>
 
 #include "Eigen/Dense"
+#include "GetPot.hpp"
 #include "StepSizeAbstract.hpp"
 #include "StoppingConditionBase.hpp"
 #include "gradient_descent.hpp"
 // later --> factory
 #include "StepSizeArmijo.hpp"
+
+void printHelp() {
+  std::cout << "Use -p <filename.dat> to load user parameters" << std::endl;
+}
 
 template <int size, typename vector_type>
 vector_type obj_func(Eigen::Matrix<vector_type, size, 1> const& x) {
@@ -20,10 +27,26 @@ Eigen::Matrix<vector_type, size, 1> grad_obj_func(
   return a;
 };
 
-int main() {
-  double tol_res = 1.e-16;
-  double tol_step_length = 1.e-12;
-  int max_iter = 1000;
+int main(int argc, char** argv) {
+  GetPot cl(argc, argv);
+  if (cl.search(2, "-h", " -help")) {
+    printHelp();
+    return 0;
+  };
+  // Search if we are giving —v version
+  bool verbose = cl.search("-v");
+  std::string filename = cl.follow("opti_options.dat", "-p");
+  std::ifstream file(filename);
+
+  if (!file.is_open()) {
+    std::cerr << "Error: Unable to open file " << filename << std::endl;
+    return 1;
+  }
+  GetPot gp(filename);  // read the file in a getpot object
+
+  double tol_res = gp("optimization/tol_res", 1.e-6);
+  double tol_step_length = gp("optimization/tol_res", 1.e-6);
+  int max_iter = gp("optimization/max_iter", 1000);
 
   // template parameters
   constexpr int vec_size{2};
@@ -59,7 +82,6 @@ int main() {
 TODO:
 - check by reference, check const types
 - step size factory
-- diff step size functions
 - read options at run time --> call the factory
 
 - generalize the descent method
