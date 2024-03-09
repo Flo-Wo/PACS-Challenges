@@ -131,10 +131,3 @@ int main(int argc, char** argv) {
   std::cout << "Finished the optimization" << std::endl;
   return 0;
 }
-
-/*
-TODO:
-- fix bug
-- add description
-- add compile instructions (make file)
-*/
