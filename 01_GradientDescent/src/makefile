@@ -1,3 +1,8 @@
+SRCS=$(wildcard *.cpp)
+OBJS = $(SRCS:.cpp=.o)
+exe_sources=$(filter main%.cpp,$(SRCS))
+EXEC=$(exe_sources:.cpp=)
+
 main:
 	g++ -O3 -std=c++20 \
     	-I"/opt/homebrew/include/eigen3" \
@@ -10,3 +15,11 @@ main_debug:
     	-I"../include/" \
     	main.cpp \
     	-o main.out
+
+clean:
+	-\rm -f $(EXEC) $(OBJS)
+
+distclean:
+	$(MAKE) clean
+	$(RM) -f ./doc $(DEPEND)
+	$(RM) *.out *.bak *~
