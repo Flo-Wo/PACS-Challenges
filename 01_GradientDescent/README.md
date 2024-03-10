@@ -51,7 +51,7 @@ We provide analytical and numerical derivatives which are directly located in th
 main-file.
 
 All options are parsed from the ``opti_options.dot`` file, by using 
-``GetPot.hpp`` as described in the class.
+``GetPot.hpp`` as described in the lecture.
 
 # Personal Notes
 ## Possible Extensions
