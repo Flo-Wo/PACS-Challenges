@@ -61,6 +61,8 @@ to ship the code as a cleaner/full software product
 - Setter and getter methods in the classes (not required for the challenge)
 - Factory methods for the gradient computation
 - Different files for the descent methods and the abstract factory
+- Organize everything in a hierarchical folder structure as it is done 
+for bigger projects
 - etc.
 
 ## Learnings
