@@ -53,7 +53,8 @@ main-file.
 All options are parsed from the ``opti_options.dot`` file, by using 
 ``GetPot.hpp`` as described in the class.
 
-# More Extensions
+# Personal Notes
+## Possible Extensions
 Currently, there are a couple of points missing, which would be required
 to ship the code as a cleaner/full software product
 
@@ -61,3 +62,20 @@ to ship the code as a cleaner/full software product
 - Factory methods for the gradient computation
 - Different files for the descent methods and the abstract factory
 - etc.
+
+## Learnings
+- Polymorphism in C++ relies on dynamic dispatch, which means that the appropriate function to call is determined
+    at runtime based on the actual type of the object being referred to.
+    This mechanism requires using pointers or references to base class objects rather than the objects themselves.
+    * Object Slicing: When you store a derived class object in a base class object, only the base class part of the
+    object is retained. This is known as object slicing, and it leads to the loss of derived class functionality.
+    Using pointers or references prevents object slicing because they directly refer to the derived class object.
+    * Dynamic Dispatch: Polymorphic behavior relies on virtual function calls, which are resolved at runtime.
+    When you call a virtual function through a base class pointer or reference, the actual function implementation
+    of the derived class object is invoked. This is only possible when using pointers or references because
+    the compiler can't determine the exact type of the object at compile time.
+    * Memory Management: When dealing with polymorphic objects, it's common to use heap memory allocation (with new)
+    and dynamic memory deallocation (with delete). Pointers are essential for managing objects on the heap,
+    as they allow you to control the object's lifetime and avoid unnecessary copying.
+- More complex examples would require a destructor in the base class and all derived classes to get rid of the
+dynamics memory allocation
