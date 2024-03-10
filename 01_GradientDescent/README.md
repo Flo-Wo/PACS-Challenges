@@ -79,3 +79,4 @@ to ship the code as a cleaner/full software product
     as they allow you to control the object's lifetime and avoid unnecessary copying.
 - More complex examples would require a destructor in the base class and all derived classes to get rid of the
 dynamics memory allocation
+- Eigen 3.4.0 enables more convenient initialization of vectors and matrices
