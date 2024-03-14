@@ -1,37 +1,40 @@
-SRCS=$(wildcard *.cpp)
+CXX      ?= g++
+CXXFLAGS ?= -std=c++20
+CPPFLAGS ?= -O3 -Wall -I"../include"
+LINK.o := $(LINK.cc) 
+
+# Set the default Eigen include path
+EIGEN_INC ?= ${mkEigenInc}
+
+# Override the default Eigen include path based on a flag
+ifdef EIGEN_MAC
+	EIGEN_INC := /opt/homebrew/include/eigen3
+endif
+
+CPPFLAGS += -I$(EIGEN_INC)
+
+
+SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
-exe_sources=$(filter main%.cpp,$(SRCS))
-EXEC=$(exe_sources:.cpp=)
+HEADERS = $(wildcard *.hpp)
 
-main:
-	g++ -O3 -std=c++20 \
-    	-I../include -I${mkEigenInc} \
-    	main.cpp \
-    	-o main.out
+exe_sources = $(filter main%.cpp, $(SRCS))
+EXEC = $(exe_sources:.cpp=)
 
-main_debug:
-	g++ -O3 -std=c++20 -DDEBUG \
-    	-I../include -I${mkEigenInc} \
-    	main.cpp \
-    	-o main.out
+.PHONY: all debug clean distclean
 
-main_mac:
-	g++ -O3 -std=c++20 \
-    	-I"/opt/homebrew/include/eigen3" \
-    	-I"../include/" \
-    	main.cpp \
-    	-o main.out
-main_debug_mac:
-	g++ -O3 -std=c++20 -DDEBUG \
-    	-I"/opt/homebrew/include/eigen3" \
-    	-I"../include/" \
-    	main.cpp \
-    	-o main.out
+all: $(EXEC)
+
+debug: CPPFLAGS += -DDEBUG
+debug: all
+
+$(EXEC): $(OBJS)
+
+$(OBJS): $(SRCS) $(HEADERS)
 
 clean:
 	-\rm -f $(EXEC) $(OBJS)
 
-distclean:
-	$(MAKE) clean
+distclean: clean
 	$(RM) -f ./doc $(DEPEND)
 	$(RM) *.out *.bak *~

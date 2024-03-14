@@ -1,12 +1,12 @@
 # Installation and Dependencies
 The only dependency is ``eigen``, but the default command ``make`` of the makefile
 is designed to work in the PACS environment, set up in the beginning of the
-course. Additionally, there is the option ``make main_debug`` which
+course. Additionally, there is the option ``make debug`` which
 included additional debugging information (e.g. the taken descent directions
 and information about the intermediate points).
 
 For people with a mac, who installed ``eigen`` via homebrew, we provide
-``make main_mac`` respectively ``make main_debug_mac``.
+``make EIGEN_MAC=1`` respectively ``make debug EIGEN_MAC=1``.
 
 TLDR:
 ```shell
