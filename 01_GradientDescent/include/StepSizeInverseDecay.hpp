@@ -29,7 +29,7 @@ class StepSizeInverseDecay : public StepSizeAbstract<Size, Type> {
   ~StepSizeInverseDecay(){};
 
   double get_stepsize(
-      Eigen::Matrix<Type, Size, 1>& x_curr, const int k_iter,
+      Eigen::Matrix<Type, Size, 1>& x_curr, const unsigned int k_iter,
       std::function<Type(const Eigen::Matrix<Type, Size, 1>&)> obj_func,
       std::function<
           Eigen::Matrix<Type, Size, 1>(const Eigen::Matrix<Type, Size, 1>&)>

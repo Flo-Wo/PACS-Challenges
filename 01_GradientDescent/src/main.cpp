@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   double tol_res = gp("optimization/tol_res", 1.e-6);
   double tol_step_length = gp("optimization/tol_res", 1.e-6);
   bool verbose = gp("optimization/opti_verbose", true);
-  int max_iter = gp("optimization/max_iter", 1000);
+  unsigned int max_iter = gp("optimization/max_iter", 1000);
 
   // template parameters
   constexpr int vec_size{2};

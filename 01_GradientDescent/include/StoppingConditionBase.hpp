@@ -7,7 +7,8 @@
 template <int Size, typename Type>
 class StoppingConditionBase {
  public:
-  StoppingConditionBase(double tol_res, double tol_step_length, int max_iter) {
+  StoppingConditionBase(double tol_res, double tol_step_length,
+                        unsigned int max_iter) {
     this->_tol_res = tol_res;
     this->_tol_step_length = tol_step_length;
     this->_max_iter = max_iter;
@@ -37,7 +38,7 @@ class StoppingConditionBase {
  private:
   double _tol_step_length;
   double _tol_res;
-  int _max_iter;
+  unsigned int _max_iter;
 };
 
 #endif  // STOPPING_CONDITION_BASE_HPP

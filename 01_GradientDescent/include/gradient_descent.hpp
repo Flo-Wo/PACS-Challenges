@@ -20,7 +20,7 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
     StepSizeAbstract<Size, Type> const* step_size,
     DescentDirectionAbstract<Size, Type> const* descent,
     bool const verbose = false) {
-  int k_iter = 0;
+  unsigned int k_iter = 0;
   Eigen::Matrix<Type, Size, 1> x_prev{x_start};
   Eigen::Matrix<Type, Size, 1> x_curr{x_start};
 
@@ -39,7 +39,7 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
       step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func);
   descent->set_grad_x0(grad_xk);
   // make single step to simplify the stopping condition, i.e. change x_k
-  x_curr = x_prev - step_size_val * grad_xk;
+  x_curr -= step_size_val * grad_xk;
   ++k_iter;
 
 #ifdef DEBUG
@@ -71,7 +71,7 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
     // compute the descent direction and the step size
     grad_xk = grad_obj_func(x_curr);
     step_size_val = step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func);
-    x_curr = x_prev - step_size_val * grad_xk;
+    x_curr -= step_size_val * grad_xk;
     ++k_iter;
   }
 
