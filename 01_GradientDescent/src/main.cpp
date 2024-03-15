@@ -1,6 +1,7 @@
 #include <complex>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "DescentDirectionFactory.hpp"
@@ -15,9 +16,21 @@ void printHelp() {
   std::cout << "Use -p <filename.dat> to load user parameters" << std::endl;
 }
 
+// based on the labs, since pow is slow
+double pow_integer(double base, unsigned int exp) {
+  double res = 1.0;
+  while (exp > 0) {
+    if (exp & 1) res *= base;
+    base *= base;
+    exp >>= 1;
+  }
+  return res;
+}
+
 template <int vec_size, typename vec_type>
 vec_type obj_func(Eigen::Matrix<vec_type, vec_size, 1> const& x) {
-  return x[0] * x[1] + 4 * pow(x[0], 4) + pow(x[1], 2) + 3 * x[0];
+  return x[0] * x[1] + 4 * pow_integer(x[0], 4) + pow_integer(x[1], 2) +
+         3 * x[0];
 };
 
 template <int vec_size, typename vec_type>
@@ -25,7 +38,7 @@ Eigen::Matrix<vec_type, vec_size, 1> grad_obj_func(
     Eigen::Matrix<vec_type, vec_size, 1> const& x) {
   Eigen::Matrix<vec_type, vec_size, 1> a;
   // NOTE: this is eigen 3.3.9
-  a << x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1];
+  a << x[1] + 16 * pow_integer(x[0], 3) + 3, x[0] + 2 * x[1];
   // this is Eigen 3.4.0
   // {{x[1] + 16 * pow(x[0], 3) + 3, x[0] + 2 * x[1]}};
   return a;
@@ -93,10 +106,10 @@ int main(int argc, char** argv) {
   using vec_type = double;
 
   // get the abstract methods for step size and stopping criterion
-  StepSizeAbstract<vec_size, vec_type>* step_size =
+  std::unique_ptr<StepSizeAbstract<vec_size, vec_type>> step_size =
       StepSizeFactory<vec_size, vec_type>::create_step_size(gp);
 
-  DescentDirectionAbstract<vec_size, vec_type>* descent =
+  std::unique_ptr<DescentDirectionAbstract<vec_size, vec_type>> descent =
       DescentDirectionFactory<vec_size, vec_type>::create_descent(gp);
 
   StoppingConditionBase<vec_size, vec_type> stop_cond{tol_res, tol_step_length,
@@ -123,10 +136,12 @@ int main(int argc, char** argv) {
     grad_obj_func_std = derivative_fd<vec_size, vec_type>(obj_func_std, h);
   }
   std::cout << "Starting the optimization" << std::endl;
+  // we cannot copy the unique pointers, thus we need to move them and use a
+  // reference to an rvalue
   Eigen::Matrix<vec_type, vec_size, 1> x_sol =
-      gradient_descent<vec_size, vec_type>(obj_func_std, grad_obj_func_std,
-                                           x_start, stop_cond, step_size,
-                                           descent, verbose);
+      gradient_descent<vec_size, vec_type>(
+          obj_func_std, grad_obj_func_std, x_start, stop_cond,
+          std::move(step_size), std::move(descent), verbose);
   std::cout << "solution = \n" << x_sol << "\n" << std::endl;
   std::cout << "Finished the optimization" << std::endl;
   return 0;

@@ -2,6 +2,7 @@
 #define DESCENT_DIR_FACTORY_HPP
 #include <algorithm>
 #include <functional>
+#include <memory>
 
 #include "Eigen/Dense"
 #include "GetPot.hpp"
@@ -88,15 +89,16 @@ class Momentum : public DescentDirectionAbstract<Size, Type> {
 template <int Size, typename Type>
 class DescentDirectionFactory {
  public:
-  static DescentDirectionAbstract<Size, Type>* create_descent(GetPot& gp) {
+  static std::unique_ptr<DescentDirectionAbstract<Size, Type>> create_descent(
+      GetPot& gp) {
     std::string grad_dir =
         gp("gradient/computation/direction/method", "steepest");
     if (grad_dir == "steepest") {
       std::cout << "Using Steepest Descent direction." << std::endl;
-      return new SteepestDescent<Size, Type>();
+      return std::make_unique<SteepestDescent<Size, Type>>();
     } else {
       std::cout << "Using Momentum Descent direction." << std::endl;
-      return new Momentum<Size, Type>(
+      return std::make_unique<Momentum<Size, Type>>(
           gp("gradient/direction/memory", 0.9),
           gp("gradient/direction/fixed_memory", true));
     }

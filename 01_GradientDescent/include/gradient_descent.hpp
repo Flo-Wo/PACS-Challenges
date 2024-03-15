@@ -17,8 +17,8 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
         grad_obj_func,
     Eigen::Matrix<Type, Size, 1> const& x_start,
     StoppingConditionBase<Size, Type> const& stop_cond,
-    StepSizeAbstract<Size, Type> const* step_size,
-    DescentDirectionAbstract<Size, Type> const* descent,
+    const std::unique_ptr<StepSizeAbstract<Size, Type>>&& step_size,
+    const std::unique_ptr<DescentDirectionAbstract<Size, Type>>&& descent,
     bool const verbose = false) {
   unsigned int k_iter = 0;
   Eigen::Matrix<Type, Size, 1> x_prev{x_start};

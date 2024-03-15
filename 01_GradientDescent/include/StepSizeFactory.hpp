@@ -26,32 +26,33 @@ template <int Size, typename Type>
 class StepSizeFactory {
  public:
   // NOTE: need to use pointers to make polymorphism work...
-  static StepSizeAbstract<Size, Type>* create_step_size(GetPot& gp) {
+  static std::unique_ptr<StepSizeAbstract<Size, Type>> create_step_size(
+      GetPot& gp) {
     Methods method = stringToMethod(gp("step_size/method", "Armijo"));
     switch (method) {
       case Methods::Armijo: {
         std::cout << "Using Armijo step size method." << std::endl;
         ArmijoParams params(gp);
-        return new StepSizeArmijo<Size, Type>(params.alpha_0, params.sigma,
-                                              params.verbose);
+        return std::make_unique<StepSizeArmijo<Size, Type>>(
+            params.alpha_0, params.sigma, params.verbose);
       }
       case Methods::Exponential: {
         std::cout << "Using Exponential step size method." << std::endl;
         ExpAndInverseDecayParams params_exp(gp);
-        return new StepSizeExponential<Size, Type>(
+        return std::make_unique<StepSizeExponential<Size, Type>>(
             params_exp.alpha_0, params_exp.mu, params_exp.verbose);
       }
       case Methods::InverseDecay: {
         std::cout << "Using InverseDecay step size method." << std::endl;
         ExpAndInverseDecayParams params_inverse(gp);
-        return new StepSizeInverseDecay<Size, Type>(
+        return std::make_unique<StepSizeInverseDecay<Size, Type>>(
             params_inverse.alpha_0, params_inverse.mu, params_inverse.verbose);
       }
       default: {
         std::cout << "Choice for step size invalid, using Armijo by default."
                   << std::endl;
         ArmijoParams params_def(gp);
-        return new StepSizeArmijo<Size, Type>(
+        return std::make_unique<StepSizeArmijo<Size, Type>>(
             params_def.alpha_0, params_def.sigma, params_def.verbose);
       }
     }
