@@ -70,7 +70,8 @@ Eigen::Matrix<Type, Size, 1> gradient_descent(
 
     // compute the descent direction and the step size
     grad_xk = grad_obj_func(x_curr);
-    step_size_val = step_size->get_stepsize(x_prev, 0, obj_func, grad_obj_func);
+    step_size_val =
+        step_size->get_stepsize(x_prev, k_iter, obj_func, grad_obj_func);
     x_curr -= step_size_val * grad_xk;
     ++k_iter;
   }

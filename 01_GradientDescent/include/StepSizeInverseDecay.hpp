@@ -26,7 +26,7 @@ class StepSizeInverseDecay : public StepSizeAbstract<Size, Type> {
     this->_verbose = verbose;
   };
   // no dynamic memery allocation
-  ~StepSizeInverseDecay(){};
+  ~StepSizeInverseDecay() = default;
 
   double get_stepsize(
       Eigen::Matrix<Type, Size, 1>& x_curr, const unsigned int k_iter,
@@ -36,6 +36,7 @@ class StepSizeInverseDecay : public StepSizeAbstract<Size, Type> {
           grad_obj_func) const override {
     double step_size = this->_alpha_0 / (1 + this->_mu * k_iter);
     if (this->_verbose) {
+      std::cout << "k_iter" << k_iter << std::endl;
       std::cout << "Linesearch ended, alpha = " << step_size << std::endl;
     }
     return step_size;

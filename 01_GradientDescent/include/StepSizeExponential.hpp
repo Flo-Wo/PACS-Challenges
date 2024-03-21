@@ -26,7 +26,7 @@ class StepSizeExponential : public StepSizeAbstract<Size, Type> {
     this->_verbose = verbose;
   };
   // no dynamic memery allocation
-  ~StepSizeExponential(){};
+  ~StepSizeExponential() = default;
 
   double get_stepsize(
       Eigen::Matrix<Type, Size, 1>& x_curr, const unsigned int k_iter,

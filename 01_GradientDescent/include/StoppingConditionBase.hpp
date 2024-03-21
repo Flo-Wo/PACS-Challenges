@@ -13,7 +13,7 @@ class StoppingConditionBase {
     this->_tol_step_length = tol_step_length;
     this->_max_iter = max_iter;
   };
-  ~StoppingConditionBase(){};
+  ~StoppingConditionBase() = default;
   virtual bool stop(
       Eigen::Matrix<Type, Size, 1> const& x_curr,
       Eigen::Matrix<Type, Size, 1> const& x_prev,

@@ -30,7 +30,7 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
     this->_verbose = verbose;
   };
   // no dynamic memery allocation
-  ~StepSizeArmijo(){};
+  ~StepSizeArmijo() = default;
 
   double get_stepsize(
       Eigen::Matrix<Type, Size, 1>& x_curr, const unsigned int k_iter,
@@ -42,11 +42,11 @@ class StepSizeArmijo : public StepSizeAbstract<Size, Type> {
 
     // we precompute all alpha-independent terms
     Type x_curr_eval = obj_func(x_curr);
-    Eigen::Matrix<Type, Size, 1> curr_dir = grad_obj_func(x_curr);
+    Eigen::Matrix<Type, Size, 1> curr_dir = (-1) * grad_obj_func(x_curr);
     Type rhs_without_alpha = this->_sigma * curr_dir.squaredNorm();
 
     auto condition = [&](Type alpha) {
-      Type x_next_eval = obj_func(x_curr - alpha * curr_dir);
+      Type x_next_eval = obj_func(x_curr + alpha * curr_dir);
 #ifdef DEBUG
       std::cout << "alpha = " << alpha << std::endl;
       std::cout << "left-hand side: " << x_curr_eval - x_next_eval << std::endl;
