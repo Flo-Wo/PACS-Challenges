@@ -26,6 +26,15 @@ double pow_integer(double base, unsigned int exp) {
   }
   return res;
 }
+//@note I did not understand fully one of your remarks in the README.md
+// If you refer to the complex types you have to indicate because of the use of Eigen
+// you may resort to type aliases. You create a struct (a trait) that defines a few aliases.
+// Moreover, you may sacrifice generality a little by assuming that the Scalar type is here always a double.
+// Finally Here, also the size is in fact fixed, so you could simply do
+// using Vector=Eigen::Matrix<double,2,1>;
+// and simpify the code a lot.
+// If you refer instead to the use of << operator in Eigen to fill a vector, that's an Eigen feature.
+// If you prefer you may address the vector components directly.
 
 template <int vec_size, typename vec_type>
 vec_type obj_func(Eigen::Matrix<vec_type, vec_size, 1> const& x) {
@@ -46,6 +55,7 @@ Eigen::Matrix<vec_type, vec_size, 1> grad_obj_func(
 
 // function returning a function which approximates the derivative using finite
 // differences
+//@note This is a general utility, you don t put general utilities in the file with the main, but in a separate translation unit
 template <int vec_size, typename vec_type>
 std::function<const Eigen::Matrix<vec_type, vec_size, 1>(
     const Eigen::Matrix<vec_type, vec_size, 1>&)>
@@ -61,6 +71,8 @@ derivative_fd(
     Eigen::Matrix<vec_type, vec_size, 1> first_der;
 
     // pertubate each component individually and use central differences
+    // You can do it in a smarter way. You have it in the Newton PACS example.
+    // Anyway, it is a good attempt.
     for (int i = 0; i < vec_size; ++i) {
       Eigen::Matrix<vec_type, vec_size, 1> pert =
           h * Eigen::Matrix<vec_type, vec_size, 1>::Unit(i);
@@ -77,6 +89,10 @@ derivative_fd(
     return first_der;
   };
   // return the lambda function and type it correctly
+  //@note its a function wrapper and not a lambda function. Besides,
+  // is is enough to type 
+  // return finite_diff;
+  // and let the compiler do the conversion. Simpler and potentially more efficient.
   return std::function<Eigen::Matrix<vec_type, vec_size, 1>(
       Eigen::Matrix<vec_type, vec_size, 1> const&)>(finite_diff);
 };
@@ -108,7 +124,7 @@ int main(int argc, char** argv) {
   // get the abstract methods for step size and stopping criterion
   std::unique_ptr<StepSizeAbstract<vec_size, vec_type>> step_size =
       StepSizeFactory<vec_size, vec_type>::create_step_size(gp);
-
+//@note nice the idea of using a factory.
   std::unique_ptr<DescentDirectionAbstract<vec_size, vec_type>> descent =
       DescentDirectionFactory<vec_size, vec_type>::create_descent(gp);
 
