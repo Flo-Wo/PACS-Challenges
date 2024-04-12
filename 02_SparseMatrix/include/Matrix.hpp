@@ -181,11 +181,13 @@ void Matrix<T, Store>::_compress_row() {
 #ifdef DEBUG
   std::cout << "num_rows = " << num_rows << "\n";
 #endif
+
   // number of non-zeros are simply the number of map entries
   std::size_t num_non_zeros = _entry_value_map.size();
-  std::size_t test = 0;
+  std::size_t counter_non_zeros = 0;
   _vec2.resize(num_non_zeros);
   _values.resize(num_non_zeros);
+
 #ifdef DEBUG
   std::cout << "vec2.size() = " << _vec2.size() << "\n";
   std::cout << "values.size() = " << _values.size() << "\n";
@@ -207,17 +209,17 @@ void Matrix<T, Store>::_compress_row() {
 #endif
       // _vec2.push_back(it->first[1]);
       // _values.push_back(it->second);
-      _vec2[test] = it->first[1];
-      _values[test] = it->second;
+      _vec2[counter_non_zeros] = it->first[1];
+      _values[counter_non_zeros] = it->second;
 #ifdef DEBUG
       std::cout << "_vec2[test] = " << _vec2[test] << "\n";
       std::cout << "values[test] =" << _values[test] << "\n\n";
 #endif
-      ++test;
+      ++counter_non_zeros;
     }
     // the number of elements is the index of the next row
     // _vec1.push_back(_vec2.size());
-    _vec1[row + 1] = test;
+    _vec1[row + 1] = counter_non_zeros;
   }
 
 #ifdef DEBUG
