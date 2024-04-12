@@ -25,18 +25,28 @@ void test_file_reader(const std::string& file_name) {
   }
 }
 
-void test_matrix_constructor(const std::string& file_name) {
+void test_matrix_row(const std::string& file_name) {
   // type aliasing
-  using order_type = StorageOrder::row;
+  // using order_type = StorageOrder::row;
   using num_type = double;
 
-  auto rowMatrix = read_matrix<num_type, order_type>(file_name);
-  auto my_matrix = Matrix<num_type, order_type>(rowMatrix);
+  auto rowMatrix = read_matrix<num_type, StorageOrder::row>(file_name);
+  auto my_matrix = Matrix<num_type, StorageOrder::row>(rowMatrix);
+
+  std::cout << my_matrix;
+  my_matrix.compress();
+  std::cout << my_matrix;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
   std::string file_name = "./lnsp_131.mtx";
+
+  // Check if an argument was provided
+  if (argc > 1) {
+    // Use the provided filename
+    file_name = argv[1];
+  }
   // test_file_reader(file_name);
-  test_matrix_constructor(file_name);
+  test_matrix_row(file_name);
   return 0;
 }
