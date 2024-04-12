@@ -80,7 +80,7 @@ class Matrix {
       os << el << ", ";
     }
     os << "\nvalues = \n";
-    for (const auto& el : matrix._vec2) {
+    for (const auto& el : matrix._values) {
       os << el << ", ";
     }
     return os;
@@ -175,28 +175,57 @@ void Matrix<T, Store>::_compress_row() {
   // _values: length #non-zero-elements -> actual values
 
   // the number of rows is the zeroth index of the last map key
-  std::size_t num_rows = _entry_value_map.rbegin()->first[0] + 1;
-  _vec1.resize(num_rows);
+  std::size_t num_rows = _entry_value_map.rbegin()->first[0];
+  _vec1.resize(num_rows + 1, 0);
+
+#ifdef DEBUG
+  std::cout << "num_rows = " << num_rows << "\n";
+#endif
   // number of non-zeros are simply the number of map entries
   std::size_t num_non_zeros = _entry_value_map.size();
+  std::size_t test = 0;
   _vec2.resize(num_non_zeros);
   _values.resize(num_non_zeros);
+#ifdef DEBUG
+  std::cout << "vec2.size() = " << _vec2.size() << "\n";
+  std::cout << "values.size() = " << _values.size() << "\n";
+#endif
 
   // row-index always starts with zero
-  _vec1.push_back(0);
+  // _vec1.push_back(0);
   // iterate row-wise
   for (std::size_t row = 0; row < num_rows; ++row) {
     // iterate row-wise using the hint
     for (auto it = _entry_value_map.lower_bound({row, 0});
          it != _entry_value_map.upper_bound({row + 1, 0}); ++it) {
       // push-back the element
-      _vec2.push_back(it->first[1]);
-      _values.push_back(it->second);
+#ifdef DEBUG
+      std::cout << "count = " << test << "\n";
+      std::cout << "it->first[0] = " << it->first[0] << "\n";
+      std::cout << "it->first[1] = " << it->first[1] << "\n";
+      std::cout << "it->second = " << it->second << "\n\n";
+#endif
+      // _vec2.push_back(it->first[1]);
+      // _values.push_back(it->second);
+      _vec2[test] = it->first[1];
+      _values[test] = it->second;
+#ifdef DEBUG
+      std::cout << "_vec2[test] = " << _vec2[test] << "\n";
+      std::cout << "values[test] =" << _values[test] << "\n\n";
+#endif
+      ++test;
     }
     // the number of elements is the index of the next row
-    _vec1.push_back(_vec2.size());
+    // _vec1.push_back(_vec2.size());
+    _vec1[row + 1] = test;
   }
 
+#ifdef DEBUG
+  std::cout << "vec1.size = " << _vec1.size() << "\n";
+  std::cout << "vec2.size = " << _vec2.size() << "\n";
+  std::cout << "values.size = " << _values.size() << "\n";
+#endif
+  std::cout << "Testing...\n";
   // save memory and set flags
   _is_compressed = true;
   _entry_value_map.clear();

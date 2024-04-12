@@ -70,6 +70,9 @@ read_matrix(const std::string& file_name) {
     // only the comparison operator is different
     entry_value_map[{row - 1, col - 1}] = value;
   }
+#ifdef DEBUG
+  std::cout << "num_elements in map: " << entry_value_map.size() << "\n";
+#endif
   return entry_value_map;
 }
 }  // namespace algebra

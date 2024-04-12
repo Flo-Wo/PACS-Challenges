@@ -33,6 +33,7 @@ void test_matrix_row(const std::string& file_name) {
   auto rowMatrix = read_matrix<num_type, StorageOrder::row>(file_name);
   auto my_matrix = Matrix<num_type, StorageOrder::row>(rowMatrix);
 
+  std::cout << "Printing the matrix\n";
   std::cout << my_matrix;
   my_matrix.compress();
   std::cout << my_matrix;

@@ -10,6 +10,7 @@
 
 # Design Decisions
 - no bound checks for the getter methods, to achieve maximal performance
+- command line arguments
 
 # Learning
 - class members can only be template specialized, if the class itself is already specialized
