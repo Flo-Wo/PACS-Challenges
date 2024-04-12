@@ -19,11 +19,15 @@ class Matrix {
 
   // TODO: change ordering if we want to be column-based
   Matrix(EntryValuesMap& entry_value_map)
-      : _is_compressed(false), _entry_value_map(_entry_value_map){};
-  Matrix(std::size_t size){};
+      : _is_compressed(false),
+        _entry_value_map(entry_value_map),
+        _vec1(),
+        _vec2(),
+        _values(){};
+  // Matrix(std::size_t size){};
 
   // TODO: leave matrix in uncompressed state
-  resize(std::size_t new_size){};
+  void resize(std::size_t new_size){};
 
   T& operator()(std::size_t row, std::size_t col) {
     if (!_is_compressed) {
@@ -40,7 +44,7 @@ class Matrix {
       return this->_find_uncompressed_element(row, col);
     }
     // compressed case
-    return this->_find_compressed_element(row, col)
+    return this->_find_compressed_element(row, col);
   };
 
   // TODO: implement a method to safely get an element -> bound checks
@@ -53,7 +57,7 @@ class Matrix {
 
   // both via template specialization
   void compress();
-  void uncompress(){};
+  void uncompress();
 
   bool is_compressed() { return _is_compressed; };
 
@@ -73,6 +77,7 @@ class Matrix {
 
   // via template specialization
   T _find_compressed_element(std::size_t row, std::size_t col) const;
+  T& _find_compressed_element(std::size_t row, std::size_t col);
 
   // class attributes
   bool _is_compressed;
@@ -86,8 +91,8 @@ class Matrix {
 
 // ======= COL MAJOR OPERATIONS =======
 // default case
-template <class T, StorageOrder Store>
-void Matrix<T, Store>::compress() {
+template <class T>
+void Matrix<T, StorageOrder::col>::compress() {
 #ifdef DEBUG
   std::cout << "Using COL-MAJOR compression to CSC.\n";
 #endif
@@ -100,7 +105,7 @@ void Matrix<T, Store>::compress() {
 
   // the number of columns is the first index of the last map key
   std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 1;
-  _vec1.resize(num_rows);
+  _vec1.resize(num_cols);
 
   // number of non-zeros are simply the number of map entries
   std::size_t num_non_zeros = _entry_value_map.size();
@@ -110,7 +115,7 @@ void Matrix<T, Store>::compress() {
   // col-index always starts with zero
   _vec1.push_back(0);
   // iterate row-wise
-  for (std::size_t col = 0; col < col_rows; ++col) {
+  for (std::size_t col = 0; col < num_cols; ++col) {
     // iterate row-wise using the hint
     for (auto it = _entry_value_map.lower_bound({0, col});
          it != _entry_value_map.upper_bound({0, col + 1}); ++it) {
@@ -153,42 +158,45 @@ void Matrix<T, Store>::uncompress() {
 
 template <class T, StorageOrder Store>
 T Matrix<T, Store>::_find_compressed_element(std::size_t row,
-                                             std::size_t col) const {}
+                                             std::size_t col) const {
 #ifdef DEBUG
-std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
+  std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
 #endif
-for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
-  if (_vec2[row_idx] == row) {
+  for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
+    if (_vec2[row_idx] == row) {
 #ifdef DEBUG
-    std::cout << "Found element.";
+      std::cout << "Found element.";
 #endif
-    return _values[row_idx];
+      return _values[row_idx];
+    }
+    return 0;
   }
-  return 0;
 }
 
 template <class T, StorageOrder Store>
-T Matrix<T, Store>::_find_compressed_element(std::size_t row, std::size_t col) {
-}
+T& Matrix<T, Store>::_find_compressed_element(std::size_t row,
+                                              std::size_t col) {
 #ifdef DEBUG
-std::cout << "Using COL-MAJOR _find_compressed_element() non-const version.\n";
+  std::cout
+      << "Using COL-MAJOR _find_compressed_element() non-const version.\n";
 #endif
-for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
-  if (_vec2[row_idx] == row) {
+  for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
+    if (_vec2[row_idx] == row) {
 #ifdef DEBUG
-    std::cout << "Found element.";
+      std::cout << "Found element.";
 #endif
-    return _values[row_idx];
+      return _values[row_idx];
+    }
+    throw std::invalid_argument(
+        "Trying to modify a zero-element in compressed format. Uncompress "
+        "first");
   }
-  throw std::invalid_argument(
-      "Trying to modify a zero-element in compressed format. Uncompress first");
 }
-
 // ======= ROW MAJOR OPERATIONS =======
 // specialization for row-major, i.e. the default case
 // convert internal mapping to compressed sparse row (CSR) format
 template <class T>
-void Matrix<T>::compress() {
+void Matrix<T, StorageOrder::row>::compress() {
 #ifdef DEBUG
   std::cout << "Using ROW-MAJOR compression to CSR.\n";
 #endif

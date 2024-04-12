@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "Matrix.hpp"
 #include "ReadMatrix.hpp"
 #include "StorageOrder.hpp"
 using namespace algebra;
@@ -24,8 +25,18 @@ void test_file_reader(const std::string& file_name) {
   }
 }
 
+void test_matrix_constructor(const std::string& file_name) {
+  // type aliasing
+  using order_type = StorageOrder::row;
+  using num_type = double;
+
+  auto rowMatrix = read_matrix<num_type, order_type>(file_name);
+  auto my_matrix = Matrix<num_type, order_type>(rowMatrix);
+}
+
 int main() {
   std::string file_name = "./lnsp_131.mtx";
-  test_file_reader(file_name);
+  // test_file_reader(file_name);
+  test_matrix_constructor(file_name);
   return 0;
 }
