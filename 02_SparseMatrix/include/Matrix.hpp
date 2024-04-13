@@ -1,5 +1,6 @@
 #ifndef MY_SPARSE_MATRIX_HPP
 #define MY_SPARSE_MATRIX_HPP
+#include <algorithm>  // TODO: remove?
 #include <array>
 #include <iostream>
 #include <map>
@@ -17,7 +18,10 @@ class Matrix {
  public:
   // TODO: change this based on the Store template -> different comparison
   // operator
-  using EntryValuesMap = std::map<std::array<std::size_t, 2>, T>;
+  using EntryValuesMap = std::map<
+      std::array<std::size_t, 2>, T,
+      std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
+                         ColOrderComparator<T>>>;
 
   // TODO: change ordering if we want to be column-based
   Matrix(EntryValuesMap& entry_value_map)
@@ -154,7 +158,7 @@ class Matrix {
 
   // class attributes
   bool _is_compressed;
-  EntryValuesMap _entry_value_map;
+  EntryValuesMap& _entry_value_map;
 
   // internal representations of the values for the compressed formats
   std::vector<std::size_t> _vec1;
@@ -175,8 +179,8 @@ void Matrix<T, Store>::_compress_row() {
   // _values: length #non-zero-elements -> actual values
 
   // the number of rows is the zeroth index of the last map key
-  std::size_t num_rows = _entry_value_map.rbegin()->first[0];
-  _vec1.resize(num_rows + 1, 0);
+  std::size_t num_rows = _entry_value_map.rbegin()->first[0] + 2;
+  _vec1.resize(num_rows, 0);
 
 #ifdef DEBUG
   std::cout << "num_rows = " << num_rows << "\n";
@@ -184,7 +188,6 @@ void Matrix<T, Store>::_compress_row() {
 
   // number of non-zeros are simply the number of map entries
   std::size_t num_non_zeros = _entry_value_map.size();
-  std::size_t counter_non_zeros = 0;
   _vec2.resize(num_non_zeros);
   _values.resize(num_non_zeros);
 
@@ -193,41 +196,17 @@ void Matrix<T, Store>::_compress_row() {
   std::cout << "values.size() = " << _values.size() << "\n";
 #endif
 
-  // row-index always starts with zero
-  // _vec1.push_back(0);
-  // iterate row-wise
-  for (std::size_t row = 0; row < num_rows; ++row) {
-    // iterate row-wise using the hint
-    for (auto it = _entry_value_map.lower_bound({row, 0});
-         it != _entry_value_map.upper_bound({row + 1, 0}); ++it) {
-      // push-back the element
-#ifdef DEBUG
-      std::cout << "count = " << test << "\n";
-      std::cout << "it->first[0] = " << it->first[0] << "\n";
-      std::cout << "it->first[1] = " << it->first[1] << "\n";
-      std::cout << "it->second = " << it->second << "\n\n";
-#endif
-      // _vec2.push_back(it->first[1]);
-      // _values.push_back(it->second);
-      _vec2[counter_non_zeros] = it->first[1];
-      _values[counter_non_zeros] = it->second;
-#ifdef DEBUG
-      std::cout << "_vec2[test] = " << _vec2[test] << "\n";
-      std::cout << "values[test] =" << _values[test] << "\n\n";
-#endif
-      ++counter_non_zeros;
-    }
-    // the number of elements is the index of the next row
-    // _vec1.push_back(_vec2.size());
-    _vec1[row + 1] = counter_non_zeros;
+  std::size_t num_non_zero = 0;
+  // idea: not use conditional jumps
+  for (const auto& [k, v] : _entry_value_map) {
+    _vec2[num_non_zero] = k[1];  // add the column index
+    _values[num_non_zero] = v;   // add the value
+    ++num_non_zero;
+    // we just update the count of non-zeros at the curr. row-idx
+    // note that the row-idx is automatically incremented
+    _vec1[k[0] + 1] = num_non_zero;
   }
 
-#ifdef DEBUG
-  std::cout << "vec1.size = " << _vec1.size() << "\n";
-  std::cout << "vec2.size = " << _vec2.size() << "\n";
-  std::cout << "values.size = " << _values.size() << "\n";
-#endif
-  std::cout << "Testing...\n";
   // save memory and set flags
   _is_compressed = true;
   _entry_value_map.clear();

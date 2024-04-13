@@ -12,27 +12,19 @@
 
 namespace algebra {
 
-template <typename T>
-struct ColOrderComparator {
-  bool operator()(const std::array<std::size_t, 2>& a,
-                  const std::array<std::size_t, 2>& b) const {
-    return (a[1] < b[1]) || ((a[1] == b[1]) && (a[0] < b[0]));
-  }
-};
-
-template <class T, StorageOrder Order>
+template <class T, StorageOrder Store>
 std::map<std::array<std::size_t, 2>, T,
-         std::conditional_t<Order == StorageOrder::row,
-                            std::less<std::array<std::size_t, 2>>,
-                            ColOrderComparator<T>>>
+         std::conditional_t<Store == StorageOrder::row,
+                            // std::less<std::array<std::size_t, 2>>,
+                            RowOrderComparator<T>, ColOrderComparator<T>>>
 read_matrix(const std::string& file_name) {
   // Define the type of the map based on storage order, i.e. use different
   // comparison operators
-  using MapType =
-      std::map<std::array<std::size_t, 2>, T,
-               std::conditional_t<Order == StorageOrder::row,
-                                  std::less<std::array<std::size_t, 2>>,
-                                  ColOrderComparator<T>>>;
+  using MapType = std::map<
+      std::array<std::size_t, 2>, T,
+      std::conditional_t<Store == StorageOrder::row,
+                         // std::less<std::array<std::size_t, 2>>,
+                         RowOrderComparator<T>, ColOrderComparator<T>>>;
 
   std::ifstream file(file_name);
   if (!file.is_open()) {
@@ -41,8 +33,6 @@ read_matrix(const std::string& file_name) {
 
   std::string line;
 
-  // Ignore comments headers, stolen from StackOverflow
-  // https://stackoverflow.com/questions/57075834/how-to-convert-matrix-market-file-to-matrix-in-c
   while (file.peek() == '%') {
     file.ignore(2048, '\n');
   }
@@ -72,6 +62,17 @@ read_matrix(const std::string& file_name) {
   }
 #ifdef DEBUG
   std::cout << "num_elements in map: " << entry_value_map.size() << "\n";
+  for (std::size_t row = 0; row < num_rows; ++row) {
+    // iterate row-wise using the hint
+    std::cout << "\nrow = " << row << ", row + 1 = " << row + 1 << "\n";
+    for (auto it = entry_value_map.lower_bound({row, 0});
+         it != entry_value_map.upper_bound({row + 1, 0}); ++it) {
+      std::cout << "it->first[0] = " << it->first[0] << "\n";
+      std::cout << "it->first[1] = " << it->first[1] << "\n";
+      std::cout << "it->second = " << it->second << "\n";
+    }
+  }
+  std::cout << "END OF READING\n\n";
 #endif
   return entry_value_map;
 }
