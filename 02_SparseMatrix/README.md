@@ -2,11 +2,11 @@
 - test the compressions (both)
 - test setter/getter method
 - move the col and row operations to different files
-- implement the matrix-vector multiplication
 
 - documentation
-- time stopping
 
+# Questions
+- two specializations instead of constexpr all the time?
 
 # Design Decisions
 - no bound checks for the getter methods, to achieve maximal performance

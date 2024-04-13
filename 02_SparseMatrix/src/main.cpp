@@ -3,9 +3,8 @@
 
 #include "Matrix.hpp"
 #include "ReadMatrix.hpp"
-#include "StorageOrder.hpp"
+#include "Utilities.hpp"
 #include "chrono.hpp"
-#include "utilities.hpp"
 
 using namespace algebra;
 
@@ -164,11 +163,11 @@ int main(int argc, char* argv[]) {
   // test_multiplication<type_format, StorageOrder::col>(file_name);
 
   // Benchmark test for the matrix-vector multiplication
-  // benchmark_multiplication<type_format, StorageOrder::row>();
-  // benchmark_multiplication<type_format, StorageOrder::col>();
+  benchmark_multiplication<type_format, StorageOrder::row>();
+  benchmark_multiplication<type_format, StorageOrder::col>();
 
   // Large benchmark test with lots of runs
-  large_benchmark_multiplication<type_format, StorageOrder::row>(1);
-  large_benchmark_multiplication<type_format, StorageOrder::col>(1);
+  // large_benchmark_multiplication<type_format, StorageOrder::row>(1);
+  // large_benchmark_multiplication<type_format, StorageOrder::col>(1);
   return 0;
 }

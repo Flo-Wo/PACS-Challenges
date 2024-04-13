@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#include "StorageOrder.hpp"
+#include "Utilities.hpp"
 
 namespace algebra {
 

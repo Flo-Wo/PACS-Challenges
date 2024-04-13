@@ -1,13 +1,13 @@
 #ifndef MY_SPARSE_MATRIX_HPP
 #define MY_SPARSE_MATRIX_HPP
-#include <algorithm>  // TODO: remove?
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <map>
 #include <stdexcept>
 #include <vector>
 
-#include "StorageOrder.hpp"
+#include "Utilities.hpp"
 
 // TODO: DOCUMENTATION
 // Question: is the map in the correct ordering given (assumption), or do we
@@ -16,20 +16,18 @@ namespace algebra {
 template <class T, StorageOrder Store = StorageOrder::row>
 class Matrix {
  public:
-  // TODO: change this based on the Store template -> different comparison
-  // operator
   using EntryValuesMap = std::map<
       std::array<std::size_t, 2>, T,
       std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
                          ColOrderComparator<T>>>;
 
-  // TODO: change ordering if we want to be column-based
   Matrix(EntryValuesMap& entry_value_map)
       : _is_compressed(false),
         _entry_value_map(entry_value_map),
         _vec1(),
         _vec2(),
         _values(){};
+  // TODO: what should happen here?
   // Matrix(std::size_t size){};
 
   // TODO: leave matrix in uncompressed state
@@ -192,240 +190,8 @@ class Matrix {
 // ======= ROW MAJOR OPERATIONS =======
 // specialization for row-major, i.e. the default case
 // convert internal mapping to compressed sparse row (CSR) format
-template <class T, StorageOrder Store>
-void Matrix<T, Store>::_compress_row() {
-#ifdef DEBUG
-  std::cout << "Using ROW-MAJOR compression to CSR.\n";
-#endif
-  // vec1 of length #rows + 1 -> row indices
-  // vec2 of length #non-zero-elements -> column index
-  // _values: length #non-zero-elements -> actual values
-
-  // #rows = highest row-number + 2
-  std::size_t num_rows = _entry_value_map.rbegin()->first[0] + 2;
-  _vec1.resize(num_rows, 0);
-
-  // number of non-zeros are simply the number of map entries
-  std::size_t num_non_zeros = _entry_value_map.size();
-  _vec2.resize(num_non_zeros);
-  _values.resize(num_non_zeros);
-
-#ifdef DEBUG
-  std::cout << "num_rows = " << num_rows << "\n";
-  std::cout << "vec2.size() = " << _vec2.size() << "\n";
-  std::cout << "values.size() = " << _values.size() << "\n";
-#endif
-
-  std::size_t num_non_zero = 0;
-  // idea: not use conditional jumps
-  for (const auto& [k, v] : _entry_value_map) {
-    _vec2[num_non_zero] = k[1];  // add the column index
-    _values[num_non_zero] = v;   // add the value
-    // we just update the count of non-zeros at the curr. row-idx
-    // note that the row-idx is automatically incremented
-    _vec1[k[0] + 1] = ++num_non_zero;
-  }
-
-  // save memory and set flags
-  _is_compressed = true;
-  _entry_value_map.clear();
-}
-
-template <class T, StorageOrder Storage>
-void Matrix<T, Storage>::_uncompress_row() {
-#ifdef DEBUG
-  std::cout << "Using ROW-MAJOR uncompression\n";
-#endif
-  // vec1 of length #rows + 1 -> row indices
-  // vec2 of length #non-zero-elements -> column index
-  // _values: length #non-zero-elements -> actual values
-  std::size_t num_rows = _vec1.size() - 1;
-  for (std::size_t row_idx = 0; row_idx < num_rows; ++row_idx) {
-    for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
-         ++col_idx) {
-      // we get the col number and the value accordingly
-      _entry_value_map[std::array<std::size_t, 2>{row_idx, _vec2[col_idx]}] =
-          _values[col_idx];
-    }
-  }
-  // save memory and set flags
-  _is_compressed = false;
-  _vec1.clear();
-  _vec2.clear();
-  _values.clear();
-}
-
-template <class T, StorageOrder Store>
-const T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
-                                                        std::size_t col) const {
-#ifdef DEBUG
-  std::cout << "Using ROW-MAJOR _find_compressed_element() const version.\n ";
-#endif
-  for (std::size_t col_idx = _vec1[row]; col_idx < _vec1[row + 1]; ++col_idx) {
-    if (_vec2[col_idx] == col) {
-#ifdef DEBUG
-      std::cout << "Found element.";
-#endif
-      return _values[col_idx];
-    }
-  }
-  return 0;
-}
-
-template <class T, StorageOrder Store>
-T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
-                                                  std::size_t col) {
-#ifdef DEBUG
-  std::cout
-      << "Using ROW-MAJOR _find_compressed_element() non-const version.\n";
-#endif
-  for (std::size_t col_idx = _vec1[row]; col_idx < _vec1[row + 1]; ++col_idx) {
-    if (_vec2[col_idx] == col) {
-#ifdef DEBUG
-      std::cout << "Found element.\n";
-#endif
-      return _values[col_idx];
-    }
-  }
-  throw std::invalid_argument(
-      "Trying to modify a zero-element in compressed format. Uncompress first");
-}
-
-template <class T, StorageOrder Store>
-std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
-  // iterate through the rows, then the elements
-  std::vector<T> res;
-  res.resize(_vec1.size() - 1, 0);
-
-  for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
-    // get the columns, according to this row
-    for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
-         ++col_idx) {
-      res[row_idx] += (vec[_vec2[col_idx]] * _values[col_idx]);
-    }
-  }
-  return res;
-}
-
+#include "Matrix_row_impl.hpp"
 // ======= COL MAJOR OPERATIONS =======
-// default case
-template <class T, StorageOrder Store>
-void Matrix<T, Store>::_compress_col() {
-#ifdef DEBUG
-  std::cout << "Using COL-MAJOR compression to CSC.\n";
-#endif
-  // NOTE(Assumption): we assume the dict is orderd in (second,first) way
-  // so (1,2) is after (2,1) in the ordering
-
-  // vec1 of length #cols + 1 -> col indices
-  // vec2 of length #non-zero-elements -> row index
-  // _values: length #non-zero-elements -> actual values
-
-  // #cols = highest col-number + 2
-  std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 2;
-  _vec1.resize(num_cols, 0);
-
-  // number of non-zeros are simply the number of map entries
-  std::size_t num_non_zeros = _entry_value_map.size();
-  _vec2.resize(num_non_zeros);
-  _values.resize(num_non_zeros);
-
-#ifdef DEBUG
-  std::cout << "num_rows = " << num_cols << "\n";
-  std::cout << "vec2.size() = " << _vec2.size() << "\n";
-  std::cout << "values.size() = " << _values.size() << "\n";
-#endif
-
-  std::size_t num_non_zero = 0;
-  // idea: not use conditional jumps
-  for (const auto& [k, v] : _entry_value_map) {
-    _vec2[num_non_zero] = k[0];  // add the column index
-    _values[num_non_zero] = v;   // add the value
-    // we just update the count of non-zeros at the curr. col-idx
-    // note that the col-idx is automatically incremented
-    _vec1[k[1] + 1] = ++num_non_zero;
-  }
-
-  // save memory and set flags
-  _is_compressed = true;
-  _entry_value_map.clear();
-}
-
-template <class T, StorageOrder Store>
-void Matrix<T, Store>::_uncompress_col() {
-#ifdef DEBUG
-  std::cout << "Using COL-MAJOR uncompression.\n";
-#endif
-  // vec1 of length #cols + 1 -> col indices
-  // vec2 of length #non-zero-elements -> row index
-  // _values: length #non-zero-elements -> actual values
-  std::size_t num_cols = _vec1.size() - 1;
-  for (std::size_t col_idx = 0; col_idx < num_cols; ++col_idx) {
-    for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
-         ++row_idx) {
-      // we get the col number and the value accordingly
-      _entry_value_map[std::array<std::size_t, 2>{_vec2[row_idx], col_idx}] =
-          _values[row_idx];
-    }
-  }
-  // save memory and set flags
-  _is_compressed = false;
-  _vec1.clear();
-  _vec2.clear();
-  _values.clear();
-}
-
-template <class T, StorageOrder Store>
-const T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
-                                                        std::size_t col) const {
-#ifdef DEBUG
-  std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
-#endif
-  for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
-    if (_vec2[row_idx] == row) {
-#ifdef DEBUG
-      std::cout << "Found element.";
-#endif
-      return _values[row_idx];
-    }
-    return 0;
-  }
-}
-
-template <class T, StorageOrder Store>
-T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
-                                                  std::size_t col) {
-#ifdef DEBUG
-  std::cout
-      << "Using COL-MAJOR _find_compressed_element() non-const version.\n";
-#endif
-  for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
-    if (_vec2[row_idx] == row) {
-#ifdef DEBUG
-      std::cout << "Found element.";
-#endif
-      return _values[row_idx];
-    }
-    throw std::invalid_argument(
-        "Trying to modify a zero-element in compressed format. Uncompress "
-        "first");
-  }
-}
-template <class T, StorageOrder Store>
-std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
-  std::vector<T> res;
-  // #rows = max value in the row-index vector
-  std::size_t num_rows = *max_element(_vec2.begin(), _vec2.end());
-  res.resize(num_rows + 1, 0);
-  // iterate through the colums
-  for (int col_idx = 0; col_idx < _vec1.size() - 1; ++col_idx) {
-    for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
-         ++row_idx) {
-      res[_vec2[row_idx]] += (vec[col_idx] * _values[row_idx]);
-    }
-  }
-  return res;
-}
-
+#include "Matrix_col_impl.hpp"
 }  // namespace algebra
 #endif
