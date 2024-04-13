@@ -314,10 +314,9 @@ void Matrix<T, Store>::_compress_col() {
   for (const auto& [k, v] : _entry_value_map) {
     _vec2[num_non_zero] = k[0];  // add the column index
     _values[num_non_zero] = v;   // add the value
-    ++num_non_zero;
     // we just update the count of non-zeros at the curr. col-idx
     // note that the col-idx is automatically incremented
-    _vec1[k[1] + 1] = num_non_zero;
+    _vec1[k[1] + 1] = ++num_non_zero;
   }
 
   // save memory and set flags

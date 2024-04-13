@@ -31,21 +31,6 @@ void test_matrix_row(const std::string& file_name) {
   using num_type = double;
 
   auto rowMatrix = read_matrix<num_type, StorageOrder::row>(file_name);
-
-#ifdef DEBUG
-  std::cout << "num_elements in map: " << rowMatrix.size() << "\n";
-  for (std::size_t row = 0; row < 10; ++row) {
-    // iterate row-wise using the hint
-    std::cout << "\nrow = " << row << ", row + 1 = " << row + 1 << "\n";
-    for (auto it = rowMatrix.lower_bound({row, 0});
-         it != rowMatrix.upper_bound({row + 1, 0}); ++it) {
-      std::cout << "it->first[0] = " << it->first[0] << "\n";
-      std::cout << "it->first[1] = " << it->first[1] << "\n";
-      std::cout << "it->second = " << it->second << "\n";
-    }
-  }
-  std::cout << "END OF MAIN\n\n";
-#endif
   auto my_matrix = Matrix<num_type, StorageOrder::row>(rowMatrix);
 
   std::cout << "Printing the matrix\n";
@@ -53,7 +38,19 @@ void test_matrix_row(const std::string& file_name) {
   my_matrix.compress();
   std::cout << my_matrix;
 }
-void test_matrix_col() {}
+void test_matrix_col(const std::string& file_name) {
+  // type aliasing
+  // using order_type = StorageOrder::row;
+  using num_type = double;
+
+  auto rowMatrix = read_matrix<num_type, StorageOrder::col>(file_name);
+  auto my_matrix = Matrix<num_type, StorageOrder::col>(rowMatrix);
+
+  std::cout << "Printing the matrix\n";
+  std::cout << my_matrix;
+  my_matrix.compress();
+  std::cout << my_matrix;
+}
 
 void benchmark_multiplication() {}
 
@@ -67,5 +64,6 @@ int main(int argc, char* argv[]) {
   }
   // test_file_reader(file_name);
   test_matrix_row(file_name);
+  test_matrix_col(file_name);
   return 0;
 }
