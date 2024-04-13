@@ -147,13 +147,14 @@ class Matrix {
     return 0;
   }
   std::vector<T> _matrix_vector_uncompressed(std::vector<T> vec) const {
+    std::cout << "here\n";
     std::vector<T> res;
-    res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
 #ifdef DEBUG
-    std::cout << "vec1.size()" << _vec1.size() << "\n";
     std::cout << "vec.size()" << vec.size() << "\n";
     std::cout << "res.size()" << res.size() << "\n";
+    std::cout << _entry_value_map.rbegin()->first[0] + 1 << "\n";
 #endif
+    res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
     for (const auto& [k, v] : _entry_value_map) {
 #ifdef DEBUG
       std::cout << "k[0] " << k[0] << ", k[1] " << k[1] << ": " << v << "\n";

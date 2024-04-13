@@ -7,7 +7,7 @@
 namespace algebra {
 
 template <class T>
-std::vector<T> _generate_random_vector(std::size_t size, int seed,
+std::vector<T> _generate_random_vector(std::size_t size,
                                        double lower_bound = -10,
                                        double upper_bound = 10) {
   std::random_device rd;
