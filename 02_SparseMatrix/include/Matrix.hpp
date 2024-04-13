@@ -102,18 +102,23 @@ class Matrix {
   // matrix vector multiplication
   // TODO: make the method a friend?
   std::vector<T> operator*(std::vector<T> vec) const {
-    if constexpr (Store == StorageOrder::row) {
-      if (!_is_compressed) {
-        return _matrix_vector_row(vec);
-      }
-      return _matrix_vector_compressed_row(vec);
-    }
-
-    // column-case
     if (!_is_compressed) {
-      return _matrix_vector_col(vec);
+      // #ifdef DEBUG
+      std::cout << "Calling matrix*vector without compression\n";
+      // #endif
+      return _matrix_vector_uncompressed(vec);
     }
-    return _matrix_vector_compressed_col(vec);
+    if constexpr (Store == StorageOrder::row) {
+      // #ifdef DEBUG
+      std::cout << "Calling matrix*vector for row compression\n";
+      // #endif
+      return _matrix_vector_row(vec);
+    }
+    // #ifdef DEBUG
+    std::cout << "Calling matrix*vector for column compression\n";
+    // for (const auto& i : _vec1) std::cout << i << " ";
+    // #endif
+    return _matrix_vector_col(vec);
   };
 
   void compress() {
@@ -146,20 +151,37 @@ class Matrix {
     }
     return 0;
   }
+  std::vector<T> _matrix_vector_uncompressed(std::vector<T> vec) const {
+    std::vector<T> res;
+    res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
+#ifdef DEBUG
+    std::cout << "vec1.size()" << _vec1.size() << "\n";
+    std::cout << "vec.size()" << vec.size() << "\n";
+    std::cout << "res.size()" << res.size() << "\n";
+#endif
+    for (const auto& [k, v] : _entry_value_map) {
+#ifdef DEBUG
+      std::cout << "k[0] " << k[0] << ", k[1] " << k[1] << ": " << v << "\n";
+      std::cout << "vec[k[1]] = " << vec[k[1]] << "\n";
+      std::cout << "res[k[0]] = " << res[k[0]] << "\n";
+#endif
+      res[k[0]] += (vec[k[1]] * v);
+    }
+    return res;
+  }
+
   // specialization to decide via const-expr
   void _compress_row();
   void _uncompress_row();
   const T& _find_compressed_element_row(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_row(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_row(std::vector<T>) const;
-  std::vector<T> _matrix_vector_compressed_row(std::vector<T>) const;
 
   void _compress_col();
   void _uncompress_col();
   const T& _find_compressed_element_col(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_col(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_col(std::vector<T>) const;
-  std::vector<T> _matrix_vector_compressed_col(std::vector<T>) const;
 
   // class attributes
   bool _is_compressed;
@@ -275,27 +297,6 @@ T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
 
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
-  std::vector<T> res;
-  res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
-#ifdef DEBUG
-  std::cout << "vec1.size()" << _vec1.size() << "\n";
-  std::cout << "vec.size()" << vec.size() << "\n";
-  std::cout << "res.size()" << res.size() << "\n";
-#endif
-  for (const auto& [k, v] : _entry_value_map) {
-#ifdef DEBUG
-    std::cout << "k[0] " << k[0] << ", k[1] " << k[1] << ": " << v << "\n";
-    std::cout << "vec[k[1]] = " << vec[k[1]] << "\n";
-    std::cout << "res[k[0]] = " << res[k[0]] << "\n";
-#endif
-    res[k[0]] += (vec[k[1]] * v);
-  }
-  return res;
-}
-
-template <class T, StorageOrder Store>
-std::vector<T> Matrix<T, Store>::_matrix_vector_compressed_row(
-    std::vector<T> vec) const {
   // iterate through the rows, then the elements
   std::vector<T> res;
   res.resize(_vec1.size() - 1, 0);
@@ -416,12 +417,19 @@ T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
 }
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
-  // TODO
-}
-template <class T, StorageOrder Store>
-std::vector<T> Matrix<T, Store>::_matrix_vector_compressed_col(
-    std::vector<T> vec) const {
-  // TODO
+  for (const auto& i : _vec1) std::cout << i << " ";
+  std::vector<T> res;
+  // #rows = max value in the row-index vector
+  std::size_t num_rows = *max_element(_vec2.begin(), _vec2.end());
+  res.resize(num_rows + 1, 0);
+  // iterate through the colums
+  for (int col_idx = 0; col_idx < _vec1.size() - 1; ++col_idx) {
+    for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
+         ++row_idx) {
+      res[_vec2[row_idx]] += (vec[col_idx] * _values[row_idx]);
+    }
+  }
+  return res;
 }
 
 }  // namespace algebra

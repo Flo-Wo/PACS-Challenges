@@ -68,6 +68,7 @@ void test_multiplication(const std::string& file_name) {
   std::cout << "\nUncompressed Multiplication worked\n";
   for (auto i : res_uncomp) std::cout << i << ' ';
   my_matrix.compress();
+  std::cout << my_matrix << "\n";
   auto res_comp = my_matrix * to_multiply;
   std::cout << "\nCompressed Multiplication worked\n";
   for (auto i : res_comp) std::cout << i << ' ';
@@ -87,6 +88,6 @@ int main(int argc, char* argv[]) {
   // test_matrix<StorageOrder::row>(file_name);
   // test_matrix<StorageOrder::col>(file_name);
   test_multiplication<StorageOrder::row>(file_name);
-  // test_multiplication<StorageOrder::col>(file_name);
+  test_multiplication<StorageOrder::col>(file_name);
   return 0;
 }
