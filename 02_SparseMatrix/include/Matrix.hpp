@@ -301,15 +301,11 @@ std::vector<T> Matrix<T, Store>::_matrix_vector_compressed_row(
   res.resize(_vec1.size() - 1, 0);
 
   for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
-    T row_times_vector = 0;
-    std::cout << "row_idx = " << row_idx << "\n";
     // get the columns, according to this row
     for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
          ++col_idx) {
-      row_times_vector += (vec[col_idx] * _values[col_idx]);
+      res[row_idx] += (vec[_vec2[col_idx]] * _values[col_idx]);
     }
-    std::cout << "row_t_vector " << row_times_vector << "\n";
-    res[row] = row_times_vector;
   }
   return res;
 }
