@@ -178,13 +178,9 @@ void Matrix<T, Store>::_compress_row() {
   // vec2 of length #non-zero-elements -> column index
   // _values: length #non-zero-elements -> actual values
 
-  // the number of rows is the zeroth index of the last map key
+  // #rows = highest row-number + 2
   std::size_t num_rows = _entry_value_map.rbegin()->first[0] + 2;
   _vec1.resize(num_rows, 0);
-
-#ifdef DEBUG
-  std::cout << "num_rows = " << num_rows << "\n";
-#endif
 
   // number of non-zeros are simply the number of map entries
   std::size_t num_non_zeros = _entry_value_map.size();
@@ -192,6 +188,7 @@ void Matrix<T, Store>::_compress_row() {
   _values.resize(num_non_zeros);
 
 #ifdef DEBUG
+  std::cout << "num_rows = " << num_rows << "\n";
   std::cout << "vec2.size() = " << _vec2.size() << "\n";
   std::cout << "values.size() = " << _values.size() << "\n";
 #endif
@@ -201,10 +198,9 @@ void Matrix<T, Store>::_compress_row() {
   for (const auto& [k, v] : _entry_value_map) {
     _vec2[num_non_zero] = k[1];  // add the column index
     _values[num_non_zero] = v;   // add the value
-    ++num_non_zero;
     // we just update the count of non-zeros at the curr. row-idx
     // note that the row-idx is automatically incremented
-    _vec1[k[0] + 1] = num_non_zero;
+    _vec1[k[0] + 1] = ++num_non_zero;
   }
 
   // save memory and set flags
@@ -297,6 +293,39 @@ void Matrix<T, Store>::_compress_col() {
   // vec2 of length #non-zero-elements -> row index
   // _values: length #non-zero-elements -> actual values
 
+  // ====
+  // #cols = highest col-number + 2
+  std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 2;
+  _vec1.resize(num_cols, 0);
+
+  // number of non-zeros are simply the number of map entries
+  std::size_t num_non_zeros = _entry_value_map.size();
+  _vec2.resize(num_non_zeros);
+  _values.resize(num_non_zeros);
+
+#ifdef DEBUG
+  std::cout << "num_rows = " << num_cols << "\n";
+  std::cout << "vec2.size() = " << _vec2.size() << "\n";
+  std::cout << "values.size() = " << _values.size() << "\n";
+#endif
+
+  std::size_t num_non_zero = 0;
+  // idea: not use conditional jumps
+  for (const auto& [k, v] : _entry_value_map) {
+    _vec2[num_non_zero] = k[0];  // add the column index
+    _values[num_non_zero] = v;   // add the value
+    ++num_non_zero;
+    // we just update the count of non-zeros at the curr. col-idx
+    // note that the col-idx is automatically incremented
+    _vec1[k[1] + 1] = num_non_zero;
+  }
+
+  // save memory and set flags
+  _is_compressed = true;
+  _entry_value_map.clear();
+  // ====
+
+  /*
   // the number of columns is the first index of the last map key
   std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 1;
   _vec1.resize(num_cols);
@@ -324,6 +353,7 @@ void Matrix<T, Store>::_compress_col() {
   // save memory and set flags
   _is_compressed = true;
   _entry_value_map.clear();
+*/
 }
 
 template <class T, StorageOrder Store>
