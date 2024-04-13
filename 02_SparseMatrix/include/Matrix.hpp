@@ -36,6 +36,9 @@ class Matrix {
   void resize(std::size_t new_size){};
 
   T& operator()(std::size_t row, std::size_t col) {
+#ifdef DEBUG
+    std::cout << "Non-const operator() is called.\n";
+#endif
     if constexpr (Store == StorageOrder::row) {
       if (!_is_compressed) {
         std::array<std::size_t, 2> find{row, col};
@@ -55,7 +58,10 @@ class Matrix {
     }
   };
 
-  T operator()(std::size_t row, std::size_t col) const {
+  const T& operator()(std::size_t row, std::size_t col) const {
+#ifdef DEBUG
+    std::cout << "Const operator() is called.\n";
+#endif
     if (!_is_compressed) {
       return this->_find_uncompressed_element(row, col);
     }
@@ -90,8 +96,6 @@ class Matrix {
     os << "\n";
     return os;
   }
-
-  // TODO: implement a method to safely get an element -> bound checks
 
   // TODO: decide at compile time which operation we use
   // we need two version for row and col major
@@ -145,14 +149,14 @@ class Matrix {
   // specialization to decide via const-expr
   void _compress_row();
   void _uncompress_row();
-  T _find_compressed_element_row(std::size_t row, std::size_t col) const;
+  const T& _find_compressed_element_row(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_row(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_row(std::vector<T>) const;
   std::vector<T> _matrix_vector_compressed_row(std::vector<T>) const;
 
   void _compress_col();
   void _uncompress_col();
-  T _find_compressed_element_col(std::size_t row, std::size_t col) const;
+  const T& _find_compressed_element_col(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_col(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_col(std::vector<T>) const;
   std::vector<T> _matrix_vector_compressed_col(std::vector<T>) const;
@@ -234,8 +238,8 @@ void Matrix<T, Storage>::_uncompress_row() {
 }
 
 template <class T, StorageOrder Store>
-T Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
-                                                 std::size_t col) const {
+const T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
+                                                        std::size_t col) const {
 #ifdef DEBUG
   std::cout << "Using ROW-MAJOR _find_compressed_element() const version.\n ";
 #endif
@@ -260,7 +264,7 @@ T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
   for (std::size_t col_idx = _vec1[row]; col_idx < _vec1[row + 1]; ++col_idx) {
     if (_vec2[col_idx] == col) {
 #ifdef DEBUG
-      std::cout << "Found element.";
+      std::cout << "Found element.\n";
 #endif
       return _values[col_idx];
     }
@@ -271,13 +275,43 @@ T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
 
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
-  // TODO
+  std::vector<T> res;
+  res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
+#ifdef DEBUG
+  std::cout << "vec1.size()" << _vec1.size() << "\n";
+  std::cout << "vec.size()" << vec.size() << "\n";
+  std::cout << "res.size()" << res.size() << "\n";
+#endif
+  for (const auto& [k, v] : _entry_value_map) {
+#ifdef DEBUG
+    std::cout << "k[0] " << k[0] << ", k[1] " << k[1] << ": " << v << "\n";
+    std::cout << "vec[k[1]] = " << vec[k[1]] << "\n";
+    std::cout << "res[k[0]] = " << res[k[0]] << "\n";
+#endif
+    res[k[0]] += (vec[k[1]] * v);
+  }
+  return res;
 }
 
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_compressed_row(
     std::vector<T> vec) const {
-  // TODO
+  // iterate through the rows, then the elements
+  std::vector<T> res;
+  res.resize(_vec1.size() - 1, 0);
+
+  for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
+    T row_times_vector = 0;
+    std::cout << "row_idx = " << row_idx << "\n";
+    // get the columns, according to this row
+    for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
+         ++col_idx) {
+      row_times_vector += (vec[col_idx] * _values[col_idx]);
+    }
+    std::cout << "row_t_vector " << row_times_vector << "\n";
+    res[row] = row_times_vector;
+  }
+  return res;
 }
 
 // ======= COL MAJOR OPERATIONS =======
@@ -294,7 +328,6 @@ void Matrix<T, Store>::_compress_col() {
   // vec2 of length #non-zero-elements -> row index
   // _values: length #non-zero-elements -> actual values
 
-  // ====
   // #cols = highest col-number + 2
   std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 2;
   _vec1.resize(num_cols, 0);
@@ -323,37 +356,6 @@ void Matrix<T, Store>::_compress_col() {
   // save memory and set flags
   _is_compressed = true;
   _entry_value_map.clear();
-  // ====
-
-  /*
-  // the number of columns is the first index of the last map key
-  std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 1;
-  _vec1.resize(num_cols);
-
-  // number of non-zeros are simply the number of map entries
-  std::size_t num_non_zeros = _entry_value_map.size();
-  _vec2.resize(num_non_zeros);
-  _values.resize(num_non_zeros);
-
-  // col-index always starts with zero
-  _vec1.push_back(0);
-  // iterate row-wise
-  for (std::size_t col = 0; col < num_cols; ++col) {
-    // iterate row-wise using the hint
-    for (auto it = _entry_value_map.lower_bound({0, col});
-         it != _entry_value_map.upper_bound({0, col + 1}); ++it) {
-      // push-back the the row idx and the actual value
-      _vec2.push_back(it->first[0]);
-      _values.push_back(it->second);
-    }
-    // the number of elements is the index of the next row
-    _vec1.push_back(_vec2.size());
-  }
-
-  // save memory and set flags
-  _is_compressed = true;
-  _entry_value_map.clear();
-*/
 }
 
 template <class T, StorageOrder Store>
@@ -381,8 +383,8 @@ void Matrix<T, Store>::_uncompress_col() {
 }
 
 template <class T, StorageOrder Store>
-T Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
-                                                 std::size_t col) const {
+const T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
+                                                        std::size_t col) const {
 #ifdef DEBUG
   std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
 #endif

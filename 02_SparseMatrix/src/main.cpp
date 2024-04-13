@@ -36,12 +36,41 @@ void test_matrix(const std::string& file_name) {
 
   std::cout << "Printing the matrix\n";
   std::cout << my_matrix;
+  // should yield 0 and 4.0
+  num_type val0 = my_matrix(0, 3);  // not present
+  num_type val4 = my_matrix(3, 3);  // present
+  std::cout << "val0 = " << val0 << ", val4 = " << val4 << "\n";
+
+  // Test compression + call operator
   my_matrix.compress();
   std::cout << "COMPRESSION WORKED\n";
   std::cout << my_matrix;
+
+  val0 = my_matrix(0, 3);  // not present
+  val4 = my_matrix(3, 3);  // present
+  std::cout << "val0 = " << val0 << ", val4 = " << val4 << "\n";
+
+  // Test uncompress + call operator
   my_matrix.uncompress();
   std::cout << "UNCOMPRESSION WORKED\n";
   std::cout << my_matrix;
+}
+
+template <StorageOrder Order>
+void test_multiplication(const std::string& file_name) {
+  using num_type = double;
+
+  auto rowMatrix = read_matrix<num_type, Order>(file_name);
+  auto my_matrix = Matrix<num_type, Order>(rowMatrix);
+  std::vector<num_type> to_multiply = {42, -17, 100, 0, 73, -5, 21, 8, -33, 55};
+
+  auto res_uncomp = my_matrix * to_multiply;
+  std::cout << "\nUncompressed Multiplication worked\n";
+  for (auto i : res_uncomp) std::cout << i << ' ';
+  my_matrix.compress();
+  auto res_comp = my_matrix * to_multiply;
+  std::cout << "\nCompressed Multiplication worked\n";
+  for (auto i : res_comp) std::cout << i << ' ';
 }
 
 void benchmark_multiplication() {}
@@ -55,7 +84,9 @@ int main(int argc, char* argv[]) {
     file_name = argv[1];
   }
   // test_file_reader(file_name);
-  test_matrix<StorageOrder::row>(file_name);
-  test_matrix<StorageOrder::col>(file_name);
+  // test_matrix<StorageOrder::row>(file_name);
+  // test_matrix<StorageOrder::col>(file_name);
+  test_multiplication<StorageOrder::row>(file_name);
+  // test_multiplication<StorageOrder::col>(file_name);
   return 0;
 }

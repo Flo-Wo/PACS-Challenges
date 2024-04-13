@@ -14,17 +14,15 @@ namespace algebra {
 
 template <class T, StorageOrder Store>
 std::map<std::array<std::size_t, 2>, T,
-         std::conditional_t<Store == StorageOrder::row,
-                            // std::less<std::array<std::size_t, 2>>,
-                            RowOrderComparator<T>, ColOrderComparator<T>>>
+         std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
+                            ColOrderComparator<T>>>
 read_matrix(const std::string& file_name) {
   // Define the type of the map based on storage order, i.e. use different
   // comparison operators
   using MapType = std::map<
       std::array<std::size_t, 2>, T,
-      std::conditional_t<Store == StorageOrder::row,
-                         // std::less<std::array<std::size_t, 2>>,
-                         RowOrderComparator<T>, ColOrderComparator<T>>>;
+      std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
+                         ColOrderComparator<T>>>;
 
   std::ifstream file(file_name);
   if (!file.is_open()) {
