@@ -27,7 +27,8 @@ void test_file_reader(const std::string& file_name) {
 
 template <StorageOrder Order>
 void test_matrix(const std::string& file_name) {
-  std::cout << "Test case for " << Order << "\n";
+  std::cout << "===========================\n";
+  std::cout << "\n\nTest case for " << Order << "\n";
   using num_type = double;
 
   auto rowMatrix = read_matrix<num_type, Order>(file_name);

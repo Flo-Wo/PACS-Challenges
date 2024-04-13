@@ -87,6 +87,7 @@ class Matrix {
     for (const auto& el : matrix._values) {
       os << el << ", ";
     }
+    os << "\n";
     return os;
   }
 
@@ -365,7 +366,7 @@ void Matrix<T, Store>::_uncompress_col() {
   // _values: length #non-zero-elements -> actual values
   std::size_t num_cols = _vec1.size() - 1;
   for (std::size_t col_idx = 0; col_idx < num_cols; ++col_idx) {
-    for (std::size_t row_idx = _vec1[col_idx]; col_idx < _vec1[row_idx + 1];
+    for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
          ++row_idx) {
       // we get the col number and the value accordingly
       _entry_value_map[std::array<std::size_t, 2>{_vec2[row_idx], col_idx}] =

@@ -16,7 +16,7 @@
 manually checking
     - other considered options: computing the number of columns and searching for all elements -> lots of conditional jumps in the loop
     - manually increasing the row number, also one conditional jump
-my solution needs zero jumps and only one loop
+my solution needs zero jumps and only one loop, no comparison operations (uncomment the debug lines in the comparison operator for the mapping)
 
 improvements:
 - one could compute the indices of where to look based on a constexpr, this would condense the

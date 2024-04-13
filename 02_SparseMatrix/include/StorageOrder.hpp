@@ -8,6 +8,9 @@ template <typename T>
 struct ColOrderComparator {
   bool operator()(const std::array<std::size_t, 2>& a,
                   const std::array<std::size_t, 2>& b) const {
+    // #ifdef DEBUG
+    //     std::cout << "Col order comparator\n";
+    // #endif
     return (a[1] < b[1]) || ((a[1] == b[1]) && (a[0] < b[0]));
   }
 };
