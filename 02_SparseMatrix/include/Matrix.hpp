@@ -412,7 +412,6 @@ T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
 }
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
-  for (const auto& i : _vec1) std::cout << i << " ";
   std::vector<T> res;
   // #rows = max value in the row-index vector
   std::size_t num_rows = *max_element(_vec2.begin(), _vec2.end());
