@@ -25,30 +25,21 @@ void test_file_reader(const std::string& file_name) {
   }
 }
 
-void test_matrix_row(const std::string& file_name) {
-  // type aliasing
-  // using order_type = StorageOrder::row;
+template <StorageOrder Order>
+void test_matrix(const std::string& file_name) {
+  std::cout << "Test case for " << Order << "\n";
   using num_type = double;
 
-  auto rowMatrix = read_matrix<num_type, StorageOrder::row>(file_name);
-  auto my_matrix = Matrix<num_type, StorageOrder::row>(rowMatrix);
+  auto rowMatrix = read_matrix<num_type, Order>(file_name);
+  auto my_matrix = Matrix<num_type, Order>(rowMatrix);
 
   std::cout << "Printing the matrix\n";
   std::cout << my_matrix;
   my_matrix.compress();
+  std::cout << "COMPRESSION WORKED\n";
   std::cout << my_matrix;
-}
-void test_matrix_col(const std::string& file_name) {
-  // type aliasing
-  // using order_type = StorageOrder::row;
-  using num_type = double;
-
-  auto rowMatrix = read_matrix<num_type, StorageOrder::col>(file_name);
-  auto my_matrix = Matrix<num_type, StorageOrder::col>(rowMatrix);
-
-  std::cout << "Printing the matrix\n";
-  std::cout << my_matrix;
-  my_matrix.compress();
+  my_matrix.uncompress();
+  std::cout << "UNCOMPRESSION WORKED\n";
   std::cout << my_matrix;
 }
 
@@ -63,7 +54,7 @@ int main(int argc, char* argv[]) {
     file_name = argv[1];
   }
   // test_file_reader(file_name);
-  test_matrix_row(file_name);
-  test_matrix_col(file_name);
+  test_matrix<StorageOrder::row>(file_name);
+  test_matrix<StorageOrder::col>(file_name);
   return 0;
 }

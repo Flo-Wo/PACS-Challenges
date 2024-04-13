@@ -38,7 +38,7 @@ class Matrix {
   T& operator()(std::size_t row, std::size_t col) {
     if constexpr (Store == StorageOrder::row) {
       if (!_is_compressed) {
-        std::array<T, 2> find{row, col};
+        std::array<std::size_t, 2> find{row, col};
         // either add or override, both is fine
         return _entry_value_map[find];
       }
@@ -46,7 +46,7 @@ class Matrix {
       return this->_find_compressed_element_row(row, col);
     } else {
       if (!_is_compressed) {
-        std::array<T, 2> find{row, col};
+        std::array<std::size_t, 2> find{row, col};
         // either add or override, both is fine
         return _entry_value_map[find];
       }
@@ -130,7 +130,7 @@ class Matrix {
 
  private:
   T _find_uncompressed_element(std::size_t row, std::size_t col) const {
-    std::array<T, 2> to_find{row, col};
+    std::array<std::size_t, 2> to_find{row, col};
     if (auto search = _entry_value_map.find(to_find);
         search != _entry_value_map.end()) {
 #ifdef DEBUG
@@ -221,8 +221,8 @@ void Matrix<T, Storage>::_uncompress_row() {
     for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
          ++col_idx) {
       // we get the col number and the value accordingly
-      _entry_value_map.insert(std::array<T, 2>{row_idx, _vec2[col_idx]},
-                              _values[col_idx]);
+      _entry_value_map[std::array<std::size_t, 2>{row_idx, _vec2[col_idx]}] =
+          _values[col_idx];
     }
   }
   // save memory and set flags
@@ -365,11 +365,11 @@ void Matrix<T, Store>::_uncompress_col() {
   // _values: length #non-zero-elements -> actual values
   std::size_t num_cols = _vec1.size() - 1;
   for (std::size_t col_idx = 0; col_idx < num_cols; ++col_idx) {
-    for (std::size_t row_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
+    for (std::size_t row_idx = _vec1[col_idx]; col_idx < _vec1[row_idx + 1];
          ++row_idx) {
       // we get the col number and the value accordingly
-      _entry_value_map.insert(std::array<T, 2>{_vec2[row_idx], col_idx},
-                              _values[row_idx]);
+      _entry_value_map[std::array<std::size_t, 2>{_vec2[row_idx], col_idx}] =
+          _values[row_idx];
     }
   }
   // save memory and set flags

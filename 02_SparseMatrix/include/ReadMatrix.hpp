@@ -60,20 +60,6 @@ read_matrix(const std::string& file_name) {
     // only the comparison operator is different
     entry_value_map[{row - 1, col - 1}] = value;
   }
-#ifdef DEBUG
-  std::cout << "num_elements in map: " << entry_value_map.size() << "\n";
-  for (std::size_t row = 0; row < num_rows; ++row) {
-    // iterate row-wise using the hint
-    std::cout << "\nrow = " << row << ", row + 1 = " << row + 1 << "\n";
-    for (auto it = entry_value_map.lower_bound({row, 0});
-         it != entry_value_map.upper_bound({row + 1, 0}); ++it) {
-      std::cout << "it->first[0] = " << it->first[0] << "\n";
-      std::cout << "it->first[1] = " << it->first[1] << "\n";
-      std::cout << "it->second = " << it->second << "\n";
-    }
-  }
-  std::cout << "END OF READING\n\n";
-#endif
   return entry_value_map;
 }
 }  // namespace algebra
