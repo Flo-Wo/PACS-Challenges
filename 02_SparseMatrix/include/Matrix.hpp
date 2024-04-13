@@ -97,27 +97,22 @@ class Matrix {
     return os;
   }
 
-  // TODO: decide at compile time which operation we use
-  // we need two version for row and col major
-  // matrix vector multiplication
-  // TODO: make the method a friend?
   std::vector<T> operator*(std::vector<T> vec) const {
     if (!_is_compressed) {
-      // #ifdef DEBUG
+#ifdef DEBUG
       std::cout << "Calling matrix*vector without compression\n";
-      // #endif
+#endif
       return _matrix_vector_uncompressed(vec);
     }
     if constexpr (Store == StorageOrder::row) {
-      // #ifdef DEBUG
+#ifdef DEBUG
       std::cout << "Calling matrix*vector for row compression\n";
-      // #endif
+#endif
       return _matrix_vector_row(vec);
     }
-    // #ifdef DEBUG
+#ifdef DEBUG
     std::cout << "Calling matrix*vector for column compression\n";
-    // for (const auto& i : _vec1) std::cout << i << " ";
-    // #endif
+#endif
     return _matrix_vector_col(vec);
   };
 
