@@ -1,9 +1,19 @@
 # TODO:
 - test the compressions (both)
 - test setter/getter method
-- move the col and row operations to different files
+- norm implementation
+    - test norms
+    - use better power function (non-default)
 
-- documentation
+- documentation -> doxygen
+
+# Compile and run
+
+For testing
+```sh
+./main small_example.mtx
+```
+
 
 # Questions
 - two specializations instead of constexpr all the time?

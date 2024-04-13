@@ -2,6 +2,7 @@
 #define MY_SPARSE_MATRIX_HPP
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -32,6 +33,19 @@ class Matrix {
 
   // TODO: leave matrix in uncompressed state
   void resize(std::size_t new_size){};
+
+  template <NormOrder Norm>
+  T norm() const {
+    // FROB norm is the easiest case
+    if constexpr (Norm == NormOrder::frob) {
+      if (!_is_compressed)
+        return _frob_norm_uncompressed();
+      else
+        return _frob_norm_compressed();
+    }
+
+    if (!is_compressed) return _norm_uncompressed();
+  };
 
   T& operator()(std::size_t row, std::size_t col) {
 #ifdef DEBUG
@@ -132,6 +146,61 @@ class Matrix {
   bool is_compressed() const { return _is_compressed; };
 
  private:
+  template <NormOrder Norm>
+  T _norm_uncompressed() const {
+    // ONE NORM
+    if constexpr (Norm == NormOrder::one) {
+      if constexpr (Store == StorageOrder::col) {
+        return _one_norm_uncompressed_col();
+      }
+      return _one_norm_uncompressed_row();
+    }
+    // MAX NORM
+    if constexpr (Store == StorageOrder::col) {
+      return _max_norm_uncompressed_col();
+    }
+    return _max_norm_uncompressed_row();
+  };
+
+  T _frob_norm_uncompressed() const {
+    T res = 0;
+    for (const auto& [k, v] : _entry_value_map) res += pow(std::norm(v), 2);
+    return res;
+  };
+  T _frob_norm_compressed() cost {
+    T res = 0;
+    for (const auto& val : _values) res += pow(st::norm(val), 2);
+    return res;
+  }
+  // max of the norms(cols)
+  // TODO: differ based on the ordering
+  T _one_norm_uncompressed_col() const {};
+  T _one_norm_uncompressed_row() const {};
+  // TODO: move to individual files
+
+  // max of the norms(rows)
+  // TODO: differ based on the ordering
+  // TODO: move to diff files
+  T _max_norm_uncompressed_col() const {};
+  T _max_norm_uncompressed_row() const {};
+
+  // TODO: check for correctness
+  // compressed version
+  T _max_norm_compressed_row() const {
+    T res = 0;
+    for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
+      // get the columns, according to this row
+      // TODO: type is probably not correct, if T is complex
+      T norm_curr_row = 0;
+      for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
+           ++col_idx) {
+        norm_curr_row += std::norm(_values[col_idx]);
+      }
+      res = std::max(res, norm_curr_row)
+    }
+    return res;
+  };
+
   T _find_uncompressed_element(std::size_t row, std::size_t col) const {
     std::array<std::size_t, 2> to_find{row, col};
     if (auto search = _entry_value_map.find(to_find);
