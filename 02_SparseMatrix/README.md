@@ -47,7 +47,7 @@ matrix and a right-hand side for ``num_runs=1000`` times, compute the average af
 Contrastingly to the suggested solution of using ``lower_bound()`` and ``upper_bound()``
 the here presented solution is not using these two commands. Instead, we rely on the ordering
 of the mapping and only use a single loop without conditional jumps. By uncommenting on the
-debugging flags in the comparison operator, one can see that for computing the ``_bound()``
+debugging flags in the comparison operator, one can see that for computing the ``<>_bound()``
 values, internally a linear search is used. Since our map is ordered, we can hide this logic
 directly in the arithmetic by calling
 
