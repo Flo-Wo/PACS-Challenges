@@ -39,6 +39,9 @@ matrix and a right-hand side for ``num_runs=1000`` times, compute the average af
 | ---  | --------- | --- |
 | Uncompressed  | 6.333 \mu s | 8.083 \mu s  |
 | Compressed  | **1.666 \mu s** | 2.792 \mu s  |
+| | | |
+| Speedup  | **3.815** | 2.895 |
+
 
 ## Note on the compression algorithm
 Contrastingly to the suggested solution of using ``lower_bound()`` and ``upper_bound()``
