@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <complex>
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -36,6 +37,9 @@ class Matrix {
 
   template <NormOrder Norm>
   T norm() const {
+#ifdef DEBUG
+    std::cout << "Calling Norm with " << Norm << "\n";
+#endif
     // FROB norm is the easiest case
     if constexpr (Norm == NormOrder::frob) {
       if (!_is_compressed)
@@ -44,33 +48,39 @@ class Matrix {
         return _frob_norm_compressed();
     }
 
-    if (!is_compressed) return _norm_uncompressed();
+    if (!_is_compressed) return _norm_uncompressed<Norm>();
+    // col compression
+    if constexpr (Store == StorageOrder::col) {
+      if constexpr (Norm == NormOrder::one) {
+        return _one_norm_compressed_col();
+      }
+      return _max_norm_compressed_col();
+    }
+    // row compression
+    if constexpr (Norm == NormOrder::one) {
+      return _one_norm_compressed_row();
+    }
+    return _max_norm_compressed_row();
   };
 
   T& operator()(std::size_t row, std::size_t col) {
 #ifdef DEBUG
     std::cout << "Non-const operator() is called.\n";
 #endif
+    if (!_is_compressed) {
+      std::array<std::size_t, 2> find{row, col};
+      // either add or override, both is fine
+      return _entry_value_map[find];
+    }
     if constexpr (Store == StorageOrder::row) {
-      if (!_is_compressed) {
-        std::array<std::size_t, 2> find{row, col};
-        // either add or override, both is fine
-        return _entry_value_map[find];
-      }
       // only existing values can be added
       return this->_find_compressed_element_row(row, col);
     } else {
-      if (!_is_compressed) {
-        std::array<std::size_t, 2> find{row, col};
-        // either add or override, both is fine
-        return _entry_value_map[find];
-      }
       // only existing values can be added
       return this->_find_compressed_element_col(row, col);
     }
   };
-
-  const T& operator()(std::size_t row, std::size_t col) const {
+  T operator()(std::size_t row, std::size_t col) const {
 #ifdef DEBUG
     std::cout << "Const operator() is called.\n";
 #endif
@@ -150,43 +160,75 @@ class Matrix {
   T _norm_uncompressed() const {
     // ONE NORM
     if constexpr (Norm == NormOrder::one) {
-      if constexpr (Store == StorageOrder::col) {
-        return _one_norm_uncompressed_col();
-      }
-      return _one_norm_uncompressed_row();
+      return _one_norm_uncompressed();
     }
-    // MAX NORM
-    if constexpr (Store == StorageOrder::col) {
-      return _max_norm_uncompressed_col();
-    }
-    return _max_norm_uncompressed_row();
+    return _max_norm_uncompressed();
   };
 
   T _frob_norm_uncompressed() const {
+#ifdef DEBUG
+    std::cout << "Frobenius Norm uncompressed.\n";
+#endif
     T res = 0;
-    for (const auto& [k, v] : _entry_value_map) res += pow(std::norm(v), 2);
-    return res;
+    for (const auto& [k, v] : _entry_value_map) res += std::norm(v);
+    return std::sqrt(res);
   };
-  T _frob_norm_compressed() cost {
+  T _frob_norm_compressed() const {
+#ifdef DEBUG
+    std::cout << "Frobenius Norm compressed.\n";
+#endif
     T res = 0;
-    for (const auto& val : _values) res += pow(st::norm(val), 2);
-    return res;
+    for (const auto& val : _values) res += std::norm(val);
+    return std::sqrt(res);
   }
-  // max of the norms(cols)
-  // TODO: differ based on the ordering
-  T _one_norm_uncompressed_col() const {};
-  T _one_norm_uncompressed_row() const {};
-  // TODO: move to individual files
 
-  // max of the norms(rows)
-  // TODO: differ based on the ordering
-  // TODO: move to diff files
-  T _max_norm_uncompressed_col() const {};
-  T _max_norm_uncompressed_row() const {};
+  // max of the sum_abs(cols)
+  T _one_norm_uncompressed() const {
+#ifdef DEBUG
+    std::cout << "One-Norm uncompressed.\n";
+#endif
+    std::size_t num_cols = 0;
+    if constexpr (Store == StorageOrder::row) {
+      for (const auto& [k, v] : _entry_value_map) {
+        num_cols = std::max(num_cols, k[1]);
+      }
+    } else {
+      num_cols = _entry_value_map.rbegin()->first[1] + 1;
+    }
+    std::vector<T> sum_abs_per_col(num_cols, 0.0);
+    for (const auto& [k, v] : _entry_value_map) {
+      sum_abs_per_col[k[1]] += std::abs(v);
+    }
+    return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
+  };
+
+  // max of the sum_abs(rows)
+  T _max_norm_uncompressed() const {
+#ifdef DEBUG
+    std::cout << "One-Norm compressed.\n";
+#endif
+    std::size_t num_rows = 0;
+    if constexpr (Store == StorageOrder::row) {
+      num_rows = _entry_value_map.rbegin()->first[0] + 1;
+    } else {
+      for (const auto& [k, v] : _entry_value_map) {
+        num_rows = std::max(num_rows, k[0]);
+      }
+    }
+    std::vector<T> sum_abs_per_row(num_rows, 0.0);
+    for (const auto& [k, v] : _entry_value_map) {
+      sum_abs_per_row[k[1]] += std::abs(v);
+    }
+    return *max_element(std::begin(sum_abs_per_row), std::end(sum_abs_per_row));
+  };
 
   // TODO: check for correctness
   // compressed version
+  // TODO: vice versa for both storage types
   T _max_norm_compressed_row() const {
+#ifdef DEBUG
+    std::cout << "Max-Norm compressed-ROW.\n";
+#endif
     T res = 0;
     for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
       // get the columns, according to this row
@@ -194,9 +236,52 @@ class Matrix {
       T norm_curr_row = 0;
       for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
            ++col_idx) {
-        norm_curr_row += std::norm(_values[col_idx]);
+        norm_curr_row += std::abs(_values[col_idx]);
       }
-      res = std::max(res, norm_curr_row)
+      res = std::max(res, norm_curr_row);
+    }
+    return res;
+  };
+
+  T _max_norm_compressed_col() const {
+#ifdef DEBUG
+    std::cout << "Max-Norm compressed-COL.\n";
+#endif
+    // same procedure as for the one_norm? -> use separate function
+    // TODO: check for correctness
+    std::size_t num_rows = *max_element(std::begin(_vec2), std::end(_vec2));
+    std::vector<T> sum_abs_per_col(num_rows, 0);
+    for (std::size_t row_idx = 0; row_idx < _vec2.size(); ++row_idx) {
+      sum_abs_per_col[_vec2[row_idx]] = std::abs(_values[row_idx]);
+    }
+    return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
+  };
+
+  T _one_norm_compressed_row() const {
+#ifdef DEBUG
+    std::cout << "One-Norm compressed-ROW.\n";
+#endif
+    std::size_t num_cols = *max_element(std::begin(_vec2), std::end(_vec2));
+    std::vector<T> sum_abs_per_col(num_cols, 0);
+    for (std::size_t col_idx = 0; col_idx < _vec2.size(); ++col_idx) {
+      sum_abs_per_col[_vec2[col_idx]] = std::abs(_values[col_idx]);
+    }
+    return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
+  };
+
+  T _one_norm_compressed_col() const {
+#ifdef DEBUG
+    std::cout << "One-Norm compressed-COLROW.\n";
+#endif
+    T res = 0;
+    for (std::size_t col_idx = 0; col_idx < _vec1.size() - 1; ++col_idx) {
+      // get the row, according to this col
+      T norm_curr_col = 0;
+      for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
+           ++row_idx) {
+        norm_curr_col += std::abs(_values[row_idx]);
+      }
+      res = std::max(res, norm_curr_col);
     }
     return res;
   };
@@ -206,9 +291,9 @@ class Matrix {
     if (auto search = _entry_value_map.find(to_find);
         search != _entry_value_map.end()) {
 #ifdef DEBUG
-      std::cout << "Found the element: " << search->first << "\n";
+      std::cout << "Found the element: " << search->first[0] << ", "
+                << search->first[1] << "\n";
 #endif
-
       return search->second;
     }
     return 0;
@@ -236,13 +321,13 @@ class Matrix {
   // specialization to decide via const-expr
   void _compress_row();
   void _uncompress_row();
-  const T& _find_compressed_element_row(std::size_t row, std::size_t col) const;
+  const T _find_compressed_element_row(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_row(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_row(std::vector<T>) const;
 
   void _compress_col();
   void _uncompress_col();
-  const T& _find_compressed_element_col(std::size_t row, std::size_t col) const;
+  const T _find_compressed_element_col(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_col(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_col(std::vector<T>) const;
 

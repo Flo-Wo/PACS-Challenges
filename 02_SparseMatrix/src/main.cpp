@@ -8,6 +8,11 @@
 
 using namespace algebra;
 
+void _print_test_case(StorageOrder Order) {
+  std::cout << "===========================\n";
+  std::cout << "\n\nTest case for " << Order << "\n";
+}
+
 void test_file_reader(const std::string& file_name) {
   try {
     // Example usage to read matrix in Matrix Market format
@@ -29,75 +34,111 @@ void test_file_reader(const std::string& file_name) {
 
 template <class T, StorageOrder Order>
 void test_matrix(const std::string& file_name) {
-  std::cout << "===========================\n";
-  std::cout << "\n\nTest case for " << Order << "\n";
+  _print_test_case(Order);
 
   auto matrix_mapping = read_matrix<T, Order>(file_name);
-  auto my_matrix = Matrix<T, Order>(matrix_mapping);
+  auto matrix = Matrix<T, Order>(matrix_mapping);
 
   std::cout << "Printing the matrix\n";
-  std::cout << my_matrix;
+  std::cout << matrix;
   // should yield 0 and 4.0
-  T val0 = my_matrix(0, 3);  // not present
-  T val4 = my_matrix(3, 3);  // present
+  std::cout << "Calling the setter/getter methods: \n";
+  T val0 = matrix(0, 3);  // not present
+
+  T val4 = matrix(3, 3);  // present
   std::cout << "val0 = " << val0 << ", val4 = " << val4 << "\n";
 
   // Test compression + call operator
-  my_matrix.compress();
+  matrix.compress();
   std::cout << "COMPRESSION WORKED\n";
-  std::cout << my_matrix;
+  std::cout << matrix;
 
-  val0 = my_matrix(0, 3);  // not present
-  val4 = my_matrix(3, 3);  // present
-  std::cout << "val0 = " << val0 << ", val4 = " << val4 << "\n";
+  std::cout << "Calling the setter/getter methods: \n";
+  T val0_comp = matrix(0, 3);  // not present
+  // throws an exception -> works correctly
+  // T val11 = 11.0;
+  // matrix(0, 4) = val11;
+
+  T val4_comp = matrix(3, 3);  // present
+  std::cout << "val0 = " << val0_comp << ", val4 = " << val4_comp << "\n";
+
+  // TODO: test the setter methods also
 
   // Test uncompress + call operator
-  my_matrix.uncompress();
+  matrix.uncompress();
   std::cout << "UNCOMPRESSION WORKED\n";
-  std::cout << my_matrix;
+  std::cout << matrix;
 }
 
 template <class T, StorageOrder Order>
 void test_multiplication(const std::string& file_name) {
+  _print_test_case(Order);
   auto matrix_mapping = read_matrix<T, Order>(file_name);
-  auto my_matrix = Matrix<T, Order>(matrix_mapping);
+  auto matrix = Matrix<T, Order>(matrix_mapping);
   std::vector<T> to_multiply = {42, -17, 100, 0, 73, -5, 21, 8, -33, 55};
 
-  auto res_uncomp = my_matrix * to_multiply;
+  auto res_uncomp = matrix * to_multiply;
   std::cout << "\nUncompressed Multiplication worked\n";
   for (auto i : res_uncomp) std::cout << i << ' ';
-  my_matrix.compress();
-  std::cout << my_matrix << "\n";
-  auto res_comp = my_matrix * to_multiply;
+  matrix.compress();
+  std::cout << matrix << "\n";
+  auto res_comp = matrix * to_multiply;
   std::cout << "\nCompressed Multiplication worked\n";
+
   for (auto i : res_comp) std::cout << i << ' ';
+}
+template <class T, StorageOrder Order>
+void test_norm(const std::string& file_name) {
+  _print_test_case(Order);
+  // std::string file_name = "./lnsp_131.mtx";
+  auto matrix_mapping = read_matrix<T, Order>(file_name);
+  auto matrix = Matrix<T, Order>(matrix_mapping);
+
+  // uncompressed
+  auto frob_uncomp = matrix.template norm<NormOrder::frob>();
+  auto one_uncomp = matrix.template norm<NormOrder::one>();
+  auto max_uncomp = matrix.template norm<NormOrder::max>();
+
+  std::cout << "Uncompressed Norm: "
+            << " frob = " << frob_uncomp << ", one = " << one_uncomp
+            << ", max = " << max_uncomp << "\n";
+
+  // compressed version
+  matrix.compress();
+  auto frob_comp = matrix.template norm<NormOrder::frob>();
+  auto one_comp = matrix.template norm<NormOrder::one>();
+  auto max_comp = matrix.template norm<NormOrder::max>();
+  std::cout << "Compressed Norm: "
+            << " frob = " << frob_comp << ", one = " << one_comp
+            << ", max = " << max_comp << "\n";
 }
 
 template <class T, StorageOrder Order>
 void benchmark_multiplication() {
+  _print_test_case(Order);
   std::string file_name = "./lnsp_131.mtx";
   Timings::Chrono timer;
   // std::vector<T> to_multiply = _generate_random_vector<T>(131);
 
   std::cout << Order << "-MAJOR UNCOMPRESSED Multiplication took:\n";
   auto matrix_mapping = read_matrix<T, Order>(file_name);
-  auto my_matrix = Matrix<T, Order>(matrix_mapping);
+  auto matrix = Matrix<T, Order>(matrix_mapping);
 
   std::vector<T> to_multiply = _generate_random_vector<T>(131);
   timer.start();
-  auto res_raw = my_matrix * to_multiply;
+  auto res_raw = matrix * to_multiply;
   timer.stop();
   std::cout << timer;
 
   std::cout << Order << "-MAJOR COMPRESSED Compression took:\n";
   timer.start();
-  my_matrix.compress();
+  matrix.compress();
   timer.stop();
   std::cout << timer;
 
   std::cout << Order << "-MAJOR COMPRESSED Multiplication took:\n";
   timer.start();
-  auto res_compressed = my_matrix * to_multiply;
+  auto res_compressed = matrix * to_multiply;
   timer.stop();
   std::cout << timer;
 }
@@ -158,13 +199,17 @@ int main(int argc, char* argv[]) {
   // test_matrix<type_format, StorageOrder::row>(file_name);
   // test_matrix<type_format, StorageOrder::col>(file_name);
 
+  // test the norm computation
+  test_norm<type_format, StorageOrder::row>(file_name);
+  test_norm<type_format, StorageOrder::col>(file_name);
+
   // Test if multiplication works
   // test_multiplication<type_format, StorageOrder::row>(file_name);
   // test_multiplication<type_format, StorageOrder::col>(file_name);
 
   // Benchmark test for the matrix-vector multiplication
-  benchmark_multiplication<type_format, StorageOrder::row>();
-  benchmark_multiplication<type_format, StorageOrder::col>();
+  // benchmark_multiplication<type_format, StorageOrder::row>();
+  // benchmark_multiplication<type_format, StorageOrder::col>();
 
   // Large benchmark test with lots of runs
   // large_benchmark_multiplication<type_format, StorageOrder::row>(1);

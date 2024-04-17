@@ -1,15 +1,16 @@
 from scipy.io import mmread
 from scipy.sparse import csr_matrix, csc_matrix
+from scipy.sparse.linalg import norm
 import numpy as np
 
 
 if __name__ == "__main__":
     matrix = mmread("small_example.mtx")
-    to_multiply = np.array([42, -17, 100, 0, 73, -5, 21, 8, -33, 55])
 
     print("CSR-MATRIX")
     csr = csr_matrix(matrix)
-    print(csr @ to_multiply)
+    # to_multiply = np.array([42, -17, 100, 0, 73, -5, 21, 8, -33, 55])
+    # print(csr @ to_multiply)
     # print(csr)
     # print(csr.data)
     # print(csr.indices)
@@ -21,3 +22,10 @@ if __name__ == "__main__":
     # print(csc.data)
     # print(csc.indices)
     # print(csc.indptr)
+
+    print("Norm")
+    for ord in ["fro", np.inf, 1]:
+        print("{} = {}".format(ord, norm(csr, ord=ord)))
+    print(csr.data)
+    print(np.sum(csr.data))
+    print(np.sqrt(np.sum(csr.data)))

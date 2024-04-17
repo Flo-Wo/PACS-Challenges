@@ -5,7 +5,18 @@
 #include <vector>
 namespace algebra {
 enum StorageOrder { row, col };
-enum NormOrder {frob, one, max};
+enum NormOrder { frob, one, max };
+
+template <class T>
+double pow_integer(T base, unsigned int exp) {
+  double res = 1.0;
+  while (exp > 0) {
+    if (exp & 1) res *= base;
+    base *= base;
+    exp >>= 1;
+  }
+  return res;
+}
 
 template <typename T>
 struct ColOrderComparator {

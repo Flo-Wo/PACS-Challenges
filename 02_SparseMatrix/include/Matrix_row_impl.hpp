@@ -12,7 +12,7 @@ void Matrix<T, Store>::_compress_row() {
   // vec2 of length #non-zero-elements -> column index
   // _values: length #non-zero-elements -> actual values
 
-  // #rows = highest row-number + 2
+  // #rows + 1 = highest row-number + 2
   std::size_t num_rows = _entry_value_map.rbegin()->first[0] + 2;
   _vec1.resize(num_rows, 0);
 
@@ -67,15 +67,15 @@ void Matrix<T, Storage>::_uncompress_row() {
 }
 
 template <class T, StorageOrder Store>
-const T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
-                                                        std::size_t col) const {
+const T Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
+                                                       std::size_t col) const {
 #ifdef DEBUG
   std::cout << "Using ROW-MAJOR _find_compressed_element() const version.\n ";
 #endif
   for (std::size_t col_idx = _vec1[row]; col_idx < _vec1[row + 1]; ++col_idx) {
     if (_vec2[col_idx] == col) {
 #ifdef DEBUG
-      std::cout << "Found element.";
+      std::cout << "Found element: " << row << ", " << col << ".\n";
 #endif
       return _values[col_idx];
     }
@@ -93,7 +93,7 @@ T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
   for (std::size_t col_idx = _vec1[row]; col_idx < _vec1[row + 1]; ++col_idx) {
     if (_vec2[col_idx] == col) {
 #ifdef DEBUG
-      std::cout << "Found element.\n";
+      std::cout << "Found element: " << row << ", " << col << ".\n";
 #endif
       return _values[col_idx];
     }

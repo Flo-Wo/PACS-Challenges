@@ -32,5 +32,8 @@ improvements:
 - one could compute the indices of where to look based on a constexpr, this would condense the
 code into one function, but it would be even harder to read
 
+# Improvements
+- save the number of rows and columns as an attribute in the class
+
 # Learning
 - class members can only be template specialized, if the class itself is already specialized

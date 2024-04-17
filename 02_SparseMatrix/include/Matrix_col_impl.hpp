@@ -70,8 +70,8 @@ void Matrix<T, Store>::_uncompress_col() {
 }
 
 template <class T, StorageOrder Store>
-const T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
-                                                        std::size_t col) const {
+const T Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
+                                                       std::size_t col) const {
 #ifdef DEBUG
   std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
 #endif
@@ -82,8 +82,8 @@ const T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
 #endif
       return _values[row_idx];
     }
-    return 0;
   }
+  return 0;
 }
 
 template <class T, StorageOrder Store>
@@ -100,10 +100,10 @@ T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
 #endif
       return _values[row_idx];
     }
-    throw std::invalid_argument(
-        "Trying to modify a zero-element in compressed format. Uncompress "
-        "first");
   }
+  throw std::invalid_argument(
+      "Trying to modify a zero-element in compressed format. Uncompress "
+      "first");
 }
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
