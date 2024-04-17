@@ -5,7 +5,8 @@ import numpy as np
 
 
 if __name__ == "__main__":
-    matrix = mmread("small_example.mtx")
+    # matrix = mmread("small_example.mtx")
+    matrix = mmread("lnsp_131.mtx")
 
     print("CSR-MATRIX")
     csr = csr_matrix(matrix)
@@ -26,6 +27,6 @@ if __name__ == "__main__":
     print("Norm")
     for ord in ["fro", np.inf, 1]:
         print("{} = {}".format(ord, norm(csr, ord=ord)))
-    print(csr.data)
-    print(np.sum(csr.data))
-    print(np.sqrt(np.sum(csr.data)))
+    # print(csr.data)
+    # print(np.sum(csr.data))
+    # print(np.sqrt(np.sum(csr.data)))

@@ -29,11 +29,14 @@ class Matrix {
         _vec1(),
         _vec2(),
         _values(){};
-  // TODO: what should happen here?
-  // Matrix(std::size_t size){};
 
-  // TODO: leave matrix in uncompressed state
-  void resize(std::size_t new_size){};
+  Matrix(std::vector<std::size_t> vec1, std::vector<std::size_t> vec2,
+         std::vector<T> values)
+      : _is_compressed(true),
+        _entry_value_map(),
+        _vec1(vec1),
+        _vec2(vec2),
+        _values(values){};
 
   template <NormOrder Norm>
   T norm() const {

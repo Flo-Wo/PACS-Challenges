@@ -18,6 +18,10 @@ For testing
 # Questions
 - two specializations instead of constexpr all the time?
 
+- resize not needed, since size is internally not stored, could be more
+efficient, if the size of the matrix is a class attribute and is updated
+every time compression or decompression is executed
+
 # Design Decisions
 - no bound checks for the getter methods, to achieve maximal performance
 - command line arguments
