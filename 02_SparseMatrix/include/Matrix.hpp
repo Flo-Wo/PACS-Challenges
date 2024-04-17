@@ -38,6 +38,12 @@ class Matrix {
         _vec2(vec2),
         _values(values){};
 
+  /**
+   * @brief Compute the norm of the matrix
+   *
+   * @tparam Norm options are NormOrder::frob, NormOrder::one, NormOrder::max
+   * @return T norm of the matrix
+   */
   template <NormOrder Norm>
   T norm() const {
 #ifdef DEBUG
@@ -66,6 +72,14 @@ class Matrix {
     return _max_norm_compressed_row();
   };
 
+  /**
+   * @brief Non-const getter and setter, in the compressed case only non-zero
+   * elements can be changed, else an exception is thrown.
+   *
+   * @param row Index of the row.
+   * @param col Index of the col.
+   * @return T& Entry of the matrix.
+   */
   T& operator()(std::size_t row, std::size_t col) {
 #ifdef DEBUG
     std::cout << "Non-const operator() is called.\n";
@@ -83,6 +97,14 @@ class Matrix {
       return this->_find_compressed_element_col(row, col);
     }
   };
+
+  /**
+   * @brief Const getter, returning the value of a matrix entry.
+   *
+   * @param row Row index.
+   * @param col Column index.
+   * @return T Value of the matrix entry.
+   */
   T operator()(std::size_t row, std::size_t col) const {
 #ifdef DEBUG
     std::cout << "Const operator() is called.\n";
@@ -97,6 +119,14 @@ class Matrix {
     return this->_find_compressed_element_col(row, col);
   };
 
+  /**
+   * @brief If compressed, print the three vectors individually, if
+   * decompressed, print the indices and the corresponding matrix entries.
+   *
+   * @param os Outputstream.
+   * @param matrix Matrix.
+   * @return std::ostream& Outputstream, allowing concatination.
+   */
   friend std::ostream& operator<<(std::ostream& os,
                                   const Matrix<T, Store> matrix) {
     if (!matrix.is_compressed()) {
@@ -122,6 +152,12 @@ class Matrix {
     return os;
   }
 
+  /**
+   * @brief Compute the matrix-vector-product.
+   *
+   * @param vec Vector x to multiply from the right-hand side.
+   * @return std::vector<T> Output vector y, i.e. y = Ax.
+   */
   std::vector<T> operator*(std::vector<T> vec) const {
     if (!_is_compressed) {
 #ifdef DEBUG
@@ -141,6 +177,10 @@ class Matrix {
     return _matrix_vector_col(vec);
   };
 
+  /**
+   * @brief Compress the matrix into row/column sparse format, i.e switch
+   * from the internal mapping to a three-vector representation.
+   */
   void compress() {
     if constexpr (Store == StorageOrder::row) {
       _compress_row();
@@ -148,6 +188,10 @@ class Matrix {
       _compress_col();
     };
   }
+  /**
+   * @brief Decompress the matrix from the three-vector format back to the
+   * internal mapping format.
+   */
   void uncompress() {
     if constexpr (Store == StorageOrder::row) {
       _uncompress_row();
