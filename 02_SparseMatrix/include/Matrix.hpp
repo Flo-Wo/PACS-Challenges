@@ -11,9 +11,6 @@
 
 #include "Utilities.hpp"
 
-// TODO: DOCUMENTATION
-// Question: is the map in the correct ordering given (assumption), or do we
-// have to change this by our own?
 namespace algebra {
 template <class T, StorageOrder Store = StorageOrder::row>
 class Matrix {
@@ -23,6 +20,14 @@ class Matrix {
       std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
                          ColOrderComparator<T>>>;
 
+  /**
+   * @brief Construct a new Matrix object
+   *
+   * @param entry_value_map Mapping with (row, col) -> value, the comparison
+   * operator and thus the type of the mapping has to be based on the storage
+   * order of the matrix. Simply use Matrix::EntryValuesMap type to construct
+   * the mapping corectly.
+   */
   Matrix(EntryValuesMap& entry_value_map)
       : _is_compressed(false),
         _entry_value_map(entry_value_map),
@@ -30,6 +35,19 @@ class Matrix {
         _vec2(),
         _values(){};
 
+  /**
+   * @brief Construct a new Matrix object, based on a compressed format.
+   * See
+   * https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)
+   *
+   * @param vec1 If row-compression, vec1 contains the row-indices, i.e.
+   * ROW_INDEX in the wikipedia article in the CSR-format. If col-compression
+   * vec1 contains the column indices.
+   * @param vec2 If row-compression, vec2 contains the col-indices, i.e.
+   * COL_INDEX in the wiki article. If col-compression, vec2 contains the
+   * row-indices.
+   * @param values Always the same, i.e. the V vector in the wiki article.
+   */
   Matrix(std::vector<std::size_t> vec1, std::vector<std::size_t> vec2,
          std::vector<T> values)
       : _is_compressed(true),
@@ -75,6 +93,8 @@ class Matrix {
   /**
    * @brief Non-const getter and setter, in the compressed case only non-zero
    * elements can be changed, else an exception is thrown.
+   * NOTE: This method does for the sake of performance not check any bounds, it
+   * is up to the user to call it correctly.
    *
    * @param row Index of the row.
    * @param col Index of the col.
@@ -100,6 +120,8 @@ class Matrix {
 
   /**
    * @brief Const getter, returning the value of a matrix entry.
+   * NOTE: This method does for the sake of performance not check any bounds, it
+   * is up to the user to call it correctly.
    *
    * @param row Row index.
    * @param col Column index.
@@ -204,6 +226,12 @@ class Matrix {
 
  private:
   template <NormOrder Norm>
+  /**
+   * @brief Internal method to wrapt the norm computation in the uncompressed
+   * case.
+   *
+   * @return T Norm of the matrix.
+   */
   T _norm_uncompressed() const {
     // ONE NORM
     if constexpr (Norm == NormOrder::one) {
@@ -212,6 +240,11 @@ class Matrix {
     return _max_norm_uncompressed();
   };
 
+  /**
+   * @brief Frobenius norm, i.e. \sqrt{sum_{i, j} \abs{a_{ij}^ 2}}
+   *
+   * @return T Norm.
+   */
   T _frob_norm_uncompressed() const {
 #ifdef DEBUG
     std::cout << "Frobenius Norm uncompressed.\n";
@@ -220,6 +253,13 @@ class Matrix {
     for (const auto& [k, v] : _entry_value_map) res += std::norm(v);
     return std::sqrt(res);
   };
+
+  /**
+   * @brief Frobenius norm compressed version, i.e. \sqrt{sum_{i, j}
+   * \abs{a_{ij}^ 2}}.
+   *
+   * @return T Norm.
+   */
   T _frob_norm_compressed() const {
 #ifdef DEBUG
     std::cout << "Frobenius Norm compressed.\n";
@@ -229,7 +269,11 @@ class Matrix {
     return std::sqrt(res);
   }
 
-  // max of the sum_abs(cols)
+  /**
+   * @brief One norm, i.e. max(sum(abs(x), axis=0)).
+   *
+   * @return T Norm of the matrix.
+   */
   T _one_norm_uncompressed() const {
 #ifdef DEBUG
     std::cout << "One-Norm uncompressed.\n";
@@ -242,7 +286,6 @@ class Matrix {
     } else {
       num_cols = _entry_value_map.rbegin()->first[1] + 1;
     }
-
 #ifdef DEBUG
     std::cout << "num_cols = " << num_cols << "\n";
 #endif
@@ -253,7 +296,11 @@ class Matrix {
     return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
   };
 
-  // max of the sum_abs(rows)
+  /**
+   * @brief Max norm, i.e. max(sum(abs(x), axis=1)).
+   *
+   * @return T Norm of the matrix.
+   */
   T _max_norm_uncompressed() const {
 #ifdef DEBUG
     std::cout << "One-Norm compressed.\n";
@@ -273,6 +320,16 @@ class Matrix {
     return *max_element(std::begin(sum_abs_per_row), std::end(sum_abs_per_row));
   };
 
+  /**
+   * @brief Find an element in the uncompressed state, used for the
+   * setter/getter methods. Returns the value, if the element is found, else 0.
+   * NOTE: This method does for the sake of performance not check any bounds, it
+   * is up to the user to call it correctly.
+   *
+   * @param row Row index.
+   * @param col Column index.
+   * @return T
+   */
   T _find_uncompressed_element(std::size_t row, std::size_t col) const {
     std::array<std::size_t, 2> to_find{row, col};
     if (auto search = _entry_value_map.find(to_find);
@@ -285,6 +342,14 @@ class Matrix {
     }
     return 0;
   }
+
+  /**
+   * @brief Matrix-vector product in the uncompressed state. Not the most
+   * efficient way, it is recommended to operate on compressed matrices.
+   *
+   * @param vec Vector x to multiply on the right side.
+   * @return std::vector<T> Vector y = A*x.
+   */
   std::vector<T> _matrix_vector_uncompressed(std::vector<T> vec) const {
     std::cout << "here\n";
     std::vector<T> res;
