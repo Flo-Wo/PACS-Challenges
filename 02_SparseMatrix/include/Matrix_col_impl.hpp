@@ -3,6 +3,16 @@
 #define MATRIX_COL_IMPLEMENTATION_HPP
 #include "Matrix.hpp"
 
+/**
+ * @brief Compress a matrix to CSC. NOTE: contrastingly to the suggested
+ * implementation this method does not rely on the lower_bound() and
+ * upper_bound() methods. Instead, we only use one for-loop and no conditional
+ * jumps by exploiting the internal ordering of the dict. The row-counter is
+ * always correctly updated since the mapping is ordered based on the rows.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ */
 template <class T, StorageOrder Store>
 void Matrix<T, Store>::_compress_col() {
 #ifdef DEBUG
@@ -45,6 +55,12 @@ void Matrix<T, Store>::_compress_col() {
   _entry_value_map.clear();
 }
 
+/**
+ * @brief Map the entries from the vectors back to the mapping.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ */
 template <class T, StorageOrder Store>
 void Matrix<T, Store>::_uncompress_col() {
 #ifdef DEBUG
@@ -69,6 +85,16 @@ void Matrix<T, Store>::_uncompress_col() {
   _values.clear();
 }
 
+/**
+ * @brief Helper method to find a compressed element in the case of
+ * column-compression.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param row Row index.
+ * @param col Column index.
+ * @return const T Value of the element
+ */
 template <class T, StorageOrder Store>
 const T Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
                                                        std::size_t col) const {
@@ -86,6 +112,16 @@ const T Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
   return 0;
 }
 
+/**
+ * @brief Helper method to implement the non-const version of the setter/getter
+ * method in the case of column-compression.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param row Row index.
+ * @param col Column index.
+ * @return &T Reference to the element.
+ */
 template <class T, StorageOrder Store>
 T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
                                                   std::size_t col) {
@@ -105,6 +141,15 @@ T& Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
       "Trying to modify a zero-element in compressed format. Uncompress "
       "first");
 }
+
+/**
+ * @brief Matrix-vector multiplication for the col-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param vec Vector x to compute A*x.
+ * @return std::vector<T> Result of the Matrix-vector multiplication.
+ */
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
   std::vector<T> res;
@@ -121,6 +166,13 @@ std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
   return res;
 }
 
+/**
+ * @brief Compute the max-norm for the column-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @return T Norm of the matrix.
+ */
 template <class T, StorageOrder Store>
 T Matrix<T, Store>::_max_norm_compressed_col() const {
 #ifdef DEBUG
@@ -134,6 +186,13 @@ T Matrix<T, Store>::_max_norm_compressed_col() const {
   return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
 }
 
+/**
+ * @brief Compute the one-norm for the column-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @return T Norm of the matrix.
+ */
 template <class T, StorageOrder Store>
 T Matrix<T, Store>::_one_norm_compressed_col() const {
 #ifdef DEBUG
