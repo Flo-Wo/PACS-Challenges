@@ -190,11 +190,15 @@ class Matrix {
     std::size_t num_cols = 0;
     if constexpr (Store == StorageOrder::row) {
       for (const auto& [k, v] : _entry_value_map) {
-        num_cols = std::max(num_cols, k[1]);
+        num_cols = std::max(num_cols, k[1] + 1);
       }
     } else {
       num_cols = _entry_value_map.rbegin()->first[1] + 1;
     }
+
+#ifdef DEBUG
+    std::cout << "num_cols = " << num_cols << "\n";
+#endif
     std::vector<T> sum_abs_per_col(num_cols, 0.0);
     for (const auto& [k, v] : _entry_value_map) {
       sum_abs_per_col[k[1]] += std::abs(v);
@@ -212,19 +216,17 @@ class Matrix {
       num_rows = _entry_value_map.rbegin()->first[0] + 1;
     } else {
       for (const auto& [k, v] : _entry_value_map) {
-        num_rows = std::max(num_rows, k[0]);
+        num_rows = std::max(num_rows, k[0] + 1);
       }
     }
     std::vector<T> sum_abs_per_row(num_rows, 0.0);
     for (const auto& [k, v] : _entry_value_map) {
-      sum_abs_per_row[k[1]] += std::abs(v);
+      sum_abs_per_row[k[0]] += std::abs(v);
     }
     return *max_element(std::begin(sum_abs_per_row), std::end(sum_abs_per_row));
   };
 
   // TODO: check for correctness
-  // compressed version
-  // TODO: vice versa for both storage types
   T _max_norm_compressed_row() const {
 #ifdef DEBUG
     std::cout << "Max-Norm compressed-ROW.\n";
@@ -252,7 +254,7 @@ class Matrix {
     std::size_t num_rows = *max_element(std::begin(_vec2), std::end(_vec2));
     std::vector<T> sum_abs_per_col(num_rows, 0);
     for (std::size_t row_idx = 0; row_idx < _vec2.size(); ++row_idx) {
-      sum_abs_per_col[_vec2[row_idx]] = std::abs(_values[row_idx]);
+      sum_abs_per_col[_vec2[row_idx]] += std::abs(_values[row_idx]);
     }
     return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
   };
@@ -264,7 +266,7 @@ class Matrix {
     std::size_t num_cols = *max_element(std::begin(_vec2), std::end(_vec2));
     std::vector<T> sum_abs_per_col(num_cols, 0);
     for (std::size_t col_idx = 0; col_idx < _vec2.size(); ++col_idx) {
-      sum_abs_per_col[_vec2[col_idx]] = std::abs(_values[col_idx]);
+      sum_abs_per_col[_vec2[col_idx]] += std::abs(_values[col_idx]);
     }
     return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
   };
