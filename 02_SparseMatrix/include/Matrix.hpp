@@ -226,68 +226,6 @@ class Matrix {
     return *max_element(std::begin(sum_abs_per_row), std::end(sum_abs_per_row));
   };
 
-  // TODO: check for correctness
-  T _max_norm_compressed_row() const {
-#ifdef DEBUG
-    std::cout << "Max-Norm compressed-ROW.\n";
-#endif
-    T res = 0;
-    for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
-      // get the columns, according to this row
-      // TODO: type is probably not correct, if T is complex
-      T norm_curr_row = 0;
-      for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
-           ++col_idx) {
-        norm_curr_row += std::abs(_values[col_idx]);
-      }
-      res = std::max(res, norm_curr_row);
-    }
-    return res;
-  };
-
-  T _max_norm_compressed_col() const {
-#ifdef DEBUG
-    std::cout << "Max-Norm compressed-COL.\n";
-#endif
-    // same procedure as for the one_norm? -> use separate function
-    // TODO: check for correctness
-    std::size_t num_rows = *max_element(std::begin(_vec2), std::end(_vec2));
-    std::vector<T> sum_abs_per_col(num_rows, 0);
-    for (std::size_t row_idx = 0; row_idx < _vec2.size(); ++row_idx) {
-      sum_abs_per_col[_vec2[row_idx]] += std::abs(_values[row_idx]);
-    }
-    return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
-  };
-
-  T _one_norm_compressed_row() const {
-#ifdef DEBUG
-    std::cout << "One-Norm compressed-ROW.\n";
-#endif
-    std::size_t num_cols = *max_element(std::begin(_vec2), std::end(_vec2));
-    std::vector<T> sum_abs_per_col(num_cols, 0);
-    for (std::size_t col_idx = 0; col_idx < _vec2.size(); ++col_idx) {
-      sum_abs_per_col[_vec2[col_idx]] += std::abs(_values[col_idx]);
-    }
-    return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
-  };
-
-  T _one_norm_compressed_col() const {
-#ifdef DEBUG
-    std::cout << "One-Norm compressed-COLROW.\n";
-#endif
-    T res = 0;
-    for (std::size_t col_idx = 0; col_idx < _vec1.size() - 1; ++col_idx) {
-      // get the row, according to this col
-      T norm_curr_col = 0;
-      for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
-           ++row_idx) {
-        norm_curr_col += std::abs(_values[row_idx]);
-      }
-      res = std::max(res, norm_curr_col);
-    }
-    return res;
-  };
-
   T _find_uncompressed_element(std::size_t row, std::size_t col) const {
     std::array<std::size_t, 2> to_find{row, col};
     if (auto search = _entry_value_map.find(to_find);
@@ -326,12 +264,16 @@ class Matrix {
   const T _find_compressed_element_row(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_row(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_row(std::vector<T>) const;
+  T _one_norm_compressed_row() const;
+  T _max_norm_compressed_row() const;
 
   void _compress_col();
   void _uncompress_col();
   const T _find_compressed_element_col(std::size_t row, std::size_t col) const;
   T& _find_compressed_element_col(std::size_t row, std::size_t col);
   std::vector<T> _matrix_vector_col(std::vector<T>) const;
+  T _one_norm_compressed_col() const;
+  T _max_norm_compressed_col() const;
 
   // class attributes
   bool _is_compressed;

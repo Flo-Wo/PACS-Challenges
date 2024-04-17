@@ -117,4 +117,36 @@ std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
   }
   return res;
 }
+
+template <class T, StorageOrder Store>
+T Matrix<T, Store>::_max_norm_compressed_row() const {
+#ifdef DEBUG
+  std::cout << "Max-Norm compressed-ROW.\n";
+#endif
+  T res = 0;
+  for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
+    // get the columns, according to this row
+    // TODO: type is probably not correct, if T is complex
+    T norm_curr_row = 0;
+    for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
+         ++col_idx) {
+      norm_curr_row += std::abs(_values[col_idx]);
+    }
+    res = std::max(res, norm_curr_row);
+  }
+  return res;
+}
+
+template <class T, StorageOrder Store>
+T Matrix<T, Store>::_one_norm_compressed_row() const {
+#ifdef DEBUG
+  std::cout << "One-Norm compressed-ROW.\n";
+#endif
+  std::size_t num_cols = *max_element(std::begin(_vec2), std::end(_vec2));
+  std::vector<T> sum_abs_per_col(num_cols, 0);
+  for (std::size_t col_idx = 0; col_idx < _vec2.size(); ++col_idx) {
+    sum_abs_per_col[_vec2[col_idx]] += std::abs(_values[col_idx]);
+  }
+  return *max_element(std::begin(sum_abs_per_col), std::end(sum_abs_per_col));
+}
 #endif
