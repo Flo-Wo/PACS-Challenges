@@ -3,6 +3,11 @@ from scipy.sparse import csr_matrix, csc_matrix
 from scipy.sparse.linalg import norm
 import numpy as np
 
+"""
+Simple test script to compare the results of my class to.
+Used to check the construction, matrix-vector multiplication
+as well as the norm computation.
+"""
 
 if __name__ == "__main__":
     # matrix = mmread("small_example.mtx")

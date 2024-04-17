@@ -12,6 +12,18 @@
 
 namespace algebra {
 
+/**
+ * @brief Read a matrix in the matrix-market format.
+ *
+ * @tparam T Type of the matrix entries.
+ * @tparam Store StorageOrder for the matrix, deciding the ordering of the
+ * mapping.
+ * @param file_name Path to the matrix-market file.
+ * @return std::map<std::array<std::size_t, 2>, T,
+ * std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
+ * ColOrderComparator<T>>> Mapping "(row, col) -> value" which can be directly
+ * passed into the constructor.
+ */
 template <class T, StorageOrder Store>
 std::map<std::array<std::size_t, 2>, T,
          std::conditional_t<Store == StorageOrder::row, RowOrderComparator<T>,
