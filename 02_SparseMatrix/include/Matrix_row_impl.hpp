@@ -3,6 +3,17 @@
 
 #include "Matrix.hpp"
 
+/**
+ * @brief Helper function to compress a matrix to the CSR-format. NOTE:
+ * contrastingly to the suggested implementation this method does not rely on
+ * the lower_bound() and upper_bound() methods. Instead, we only use one
+ * for-loop and no conditional jumps by exploiting the internal ordering of the
+ * dict. The row-counter is always correctly updated since the mapping is
+ * ordered based on the rows.
+ *
+ * @tparam T Type of the matrix entries.
+ * @tparam Store StorageOrder, either row or col.
+ */
 template <class T, StorageOrder Store>
 void Matrix<T, Store>::_compress_row() {
 #ifdef DEBUG
@@ -42,6 +53,12 @@ void Matrix<T, Store>::_compress_row() {
   _entry_value_map.clear();
 }
 
+/**
+ * @brief Map the entries from the vectors back to the mapping.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ */
 template <class T, StorageOrder Storage>
 void Matrix<T, Storage>::_uncompress_row() {
 #ifdef DEBUG
@@ -66,6 +83,16 @@ void Matrix<T, Storage>::_uncompress_row() {
   _values.clear();
 }
 
+/**
+ * @brief Helper method to find a compressed element in the case of
+ * row-compression.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param row Row index.
+ * @param col Column index.
+ * @return const T Value of the element
+ */
 template <class T, StorageOrder Store>
 const T Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
                                                        std::size_t col) const {
@@ -83,6 +110,16 @@ const T Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
   return 0;
 }
 
+/**
+ * @brief Helper method to implement the non-const version of the setter/getter
+ * method in the case of row-compression.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param row Row index.
+ * @param col Column index.
+ * @return &T Reference to the element.
+ */
 template <class T, StorageOrder Store>
 T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
                                                   std::size_t col) {
@@ -102,6 +139,14 @@ T& Matrix<T, Store>::_find_compressed_element_row(std::size_t row,
       "Trying to modify a zero-element in compressed format. Uncompress first");
 }
 
+/**
+ * @brief Matrix-vector multiplication for the row-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @param vec Vector x to compute A*x.
+ * @return std::vector<T> Result of the Matrix-vector multiplication.
+ */
 template <class T, StorageOrder Store>
 std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
   // iterate through the rows, then the elements
@@ -118,6 +163,13 @@ std::vector<T> Matrix<T, Store>::_matrix_vector_row(std::vector<T> vec) const {
   return res;
 }
 
+/**
+ * @brief Compute the max-norm for the row-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @return T Norm of the matrix.
+ */
 template <class T, StorageOrder Store>
 T Matrix<T, Store>::_max_norm_compressed_row() const {
 #ifdef DEBUG
@@ -126,7 +178,6 @@ T Matrix<T, Store>::_max_norm_compressed_row() const {
   T res = 0;
   for (std::size_t row_idx = 0; row_idx < _vec1.size() - 1; ++row_idx) {
     // get the columns, according to this row
-    // TODO: type is probably not correct, if T is complex
     T norm_curr_row = 0;
     for (std::size_t col_idx = _vec1[row_idx]; col_idx < _vec1[row_idx + 1];
          ++col_idx) {
@@ -137,6 +188,13 @@ T Matrix<T, Store>::_max_norm_compressed_row() const {
   return res;
 }
 
+/**
+ * @brief Compute the one-norm for the col-compression case.
+ *
+ * @tparam T Type of the entries.
+ * @tparam Store Storage order.
+ * @return T Norm of the matrix.
+ */
 template <class T, StorageOrder Store>
 T Matrix<T, Store>::_one_norm_compressed_row() const {
 #ifdef DEBUG
