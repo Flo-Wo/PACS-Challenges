@@ -10,6 +10,7 @@ using namespace algebra;
 int main(int argc, char* argv[]) {
   using type_format = double;
   std::string file_name = "./lnsp_131.mtx";
+  std::string file_name_small = "./small_example.mtx";
 
   // Check if an argument was provided
   if (argc > 1) {
@@ -21,8 +22,8 @@ int main(int argc, char* argv[]) {
   // test_file_reader<type_format, StorageOrder::col>(file_name);
 
   // Test if constructor, compression and call operator work
-  // test_basic_operations<type_format, StorageOrder::row>(file_name);
-  // test_basic_operations<type_format, StorageOrder::col>(file_name);
+  // test_basic_operations<type_format, StorageOrder::row>(file_name_small);
+  // test_basic_operations<type_format, StorageOrder::col>(file_name_small);
 
   // test the norm computation
   // test_norm<type_format, StorageOrder::row>(file_name);
