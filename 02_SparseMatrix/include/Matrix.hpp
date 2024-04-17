@@ -351,14 +351,25 @@ class Matrix {
    * @return std::vector<T> Vector y = A*x.
    */
   std::vector<T> _matrix_vector_uncompressed(std::vector<T> vec) const {
-    std::cout << "here\n";
-    std::vector<T> res;
+    std::size_t num_rows = 0;
+    if constexpr (Store == StorageOrder::row) {
+#ifdef DEBUG
+      std::cout << "row\n";
+#endif
+      num_rows = _entry_value_map.rbegin()->first[0];
+    } else {
+      for (const auto& [k, v] : _entry_value_map)
+        num_rows = std::max(num_rows, k[0]);
+    }
 #ifdef DEBUG
     std::cout << "vec.size()" << vec.size() << "\n";
-    std::cout << "res.size()" << res.size() << "\n";
-    std::cout << _entry_value_map.rbegin()->first[0] + 1 << "\n";
+    // std::cout << "res.size()" << res.size() << "\n";
+    std::cout << "num_rows = " << num_rows << "\n";
+    // std::cout << _entry_value_map.rbegin()->first[0] + 1 << "\n";
 #endif
-    res.resize(_entry_value_map.rbegin()->first[0] + 1, 0);
+
+    std::vector<T> res(num_rows, 0);
+    // res.resize(num_rows, 0);
     for (const auto& [k, v] : _entry_value_map) {
 #ifdef DEBUG
       std::cout << "k[0] " << k[0] << ", k[1] " << k[1] << ": " << v << "\n";
