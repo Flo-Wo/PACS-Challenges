@@ -9,7 +9,8 @@ void jacobi_update(
     Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>& U_next,
     Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>& f_matrix, int nx,
     int ny, double h) {
-#pragma omp parallel for collapse(2)
+  // TODO: omp pragma
+  // #pragma omp parallel for collapse(2)
   for (int i = 1; i < nx - 1; ++i) {
     for (int j = 1; j < ny - 1; ++j) {
       // jacobi rule with a forcing term

@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
     // Synchronize to ensure all processes have completed communication
     MPI_Barrier(MPI_COMM_WORLD);
-    std::cout << "iter = " << iter << "\n";
+    // std::cout << "iter = " << iter << "\n";
   }
 
   // cleanup
