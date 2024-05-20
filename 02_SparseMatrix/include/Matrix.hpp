@@ -1,5 +1,6 @@
 #ifndef MY_SPARSE_MATRIX_HPP
 #define MY_SPARSE_MATRIX_HPP
+// clang-format off
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -8,8 +9,8 @@
 #include <map>
 #include <stdexcept>
 #include <vector>
-
-#include "Utilities.hpp"
+//@note I thing you are using mac-os? I had to change Utilities in utilities
+#include "utilities.hpp"
 
 namespace algebra {
 template <class T, StorageOrder Store = StorageOrder::row>
@@ -399,6 +400,8 @@ class Matrix {
   T _max_norm_compressed_col() const;
 
   // class attributes
+  //@note As I told at lecture, is is not good practice having names starting with underscore. They are used for the compiler internal variables.
+  // you may use undercore everywhere, but not at the beginning
   bool _is_compressed;
   EntryValuesMap& _entry_value_map;
 

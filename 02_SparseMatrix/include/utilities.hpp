@@ -1,5 +1,6 @@
 #ifndef STORAGE_ORDER_HPP
 #define STORAGE_ORDER_HPP
+// clang-format off
 #include <iostream>
 #include <random>
 #include <vector>
@@ -59,6 +60,7 @@ std::vector<T> _generate_random_vector(std::size_t size,
   std::uniform_real_distribution<T> dis(lower_bound, upper_bound);
 
   std::vector<T> random_vector(size);
+  //@note size is unsigned. To avoid warnings use unsigned i instead of int
   for (int i = 0; i < size; ++i) {
     random_vector[i] = dis(gen);
   }

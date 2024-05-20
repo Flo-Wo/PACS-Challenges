@@ -2,7 +2,7 @@
 #ifndef MATRIX_COL_IMPLEMENTATION_HPP
 #define MATRIX_COL_IMPLEMENTATION_HPP
 #include "Matrix.hpp"
-
+// clang-format off
 /**
  * @brief Compress a matrix to CSC. NOTE: contrastingly to the suggested
  * implementation this method does not rely on the lower_bound() and
@@ -25,7 +25,8 @@ void Matrix<T, Store>::_compress_col() {
   // vec2 of length #non-zero-elements -> row index
   // _values: length #non-zero-elements -> actual values
 
-  // #cols = highest col-number + 2
+  // #cols = highest col-number + 2 //@note you are assuming that you cannot have in the matrix a column filled of zeros
+  //@note I think that it is better to store the number of rows and columns af variable members of the matrix. 
   std::size_t num_cols = _entry_value_map.rbegin()->first[1] + 2;
   _vec1.resize(num_cols, 0);
 
@@ -47,7 +48,7 @@ void Matrix<T, Store>::_compress_col() {
     _values[num_non_zero] = v;   // add the value
     // we just update the count of non-zeros at the curr. col-idx
     // note that the col-idx is automatically incremented
-    _vec1[k[1] + 1] = ++num_non_zero;
+    _vec1[k[1] + 1] = ++num_non_zero; //@note Thats smart! You are using the fact that the map is ordered by the column index
   }
 
   // save memory and set flags
@@ -83,6 +84,8 @@ void Matrix<T, Store>::_uncompress_col() {
   _vec1.clear();
   _vec2.clear();
   _values.clear();
+  //@note You are NOT saving memory. You are sitting the size to zero. In a vector
+  // to clear memory you should use the shrink_to_fit method after clearing the vector.
 }
 
 /**
@@ -102,6 +105,7 @@ const T Matrix<T, Store>::_find_compressed_element_col(std::size_t row,
   std::cout << "Using COL-MAJOR _find_compressed_element() const version.\n";
 #endif
   for (std::size_t row_idx = _vec1[col]; row_idx < _vec1[col + 1]; ++row_idx) {
+    //@note if the inner index is sorted you can use a binary search, more efficient.
     if (_vec2[row_idx] == row) {
 #ifdef DEBUG
       std::cout << "Found element.";
@@ -157,6 +161,18 @@ std::vector<T> Matrix<T, Store>::_matrix_vector_col(std::vector<T> vec) const {
   std::size_t num_rows = *max_element(_vec2.begin(), _vec2.end());
   res.resize(num_rows + 1, 0);
   // iterate through the colums
+  //@note This is dangerous. vec1.size() is unsigned, if you subtract to an unsigned bad things can happen. I it is 0 and you subtract 1 
+  // you get the maximum value of the unsigned int
+  // you can sort things by a static cast to int, but not very nice, of by fixing a lower bound of 0
+  // auto end = _vec1.size();
+  // end = end==0 ? 0 : end-1;
+  // for (std::size_t col_idx = 0; col_idx < end; ++col_idx) {
+  // This way, you are safe! And avoid warnings.
+    for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
+         ++row_idx) {
+      res[_vec2[row_idx]] += (vec[col_idx] * _values[row_idx]);
+    }
+  }
   for (int col_idx = 0; col_idx < _vec1.size() - 1; ++col_idx) {
     for (std::size_t row_idx = _vec1[col_idx]; row_idx < _vec1[col_idx + 1];
          ++row_idx) {

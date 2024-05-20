@@ -3,10 +3,10 @@
 #define TEST_CASES_MATRIX_HPP
 #include <iostream>
 #include <string>
-
+// clang-format off
 #include "Matrix.hpp"
 #include "ReadMatrix.hpp"
-#include "Utilities.hpp"
+#include "utilities.hpp"
 #include "chrono.hpp"
 
 using namespace algebra;

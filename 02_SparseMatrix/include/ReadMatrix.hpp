@@ -1,6 +1,6 @@
 #ifndef READ_MATRIX_HPP
 #define READ_MATRIX_HPP
-
+// clang-format off
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#include "Utilities.hpp"
+#include "utilities.hpp"
 
 namespace algebra {
 
